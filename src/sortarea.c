@@ -144,7 +144,7 @@ void SquishSortArea(s_area *area)
    long      i, msgs, idxPos;
 
    SQBASE    sqbase;
-   SQHDR     sqhdr;
+//   SQHDR     sqhdr;
    XMSG      xmsg;
    SQIDX     sqidx;
    SQSORTptr sqsort = NULL;
@@ -224,7 +224,7 @@ void SquishSortArea(s_area *area)
          lseek(SqdHandle, sqidx.ofs + SQHDR_SIZE, SEEK_SET);
          read_xmsg(SqdHandle, &xmsg);
 
-         if (sqhdr.id != SQHDRID) continue;
+//         if (sqhdr.id != SQHDRID) continue;
 
          sqsort = AddSQSORT(sqsort, &sqidx, &xmsg);
 
