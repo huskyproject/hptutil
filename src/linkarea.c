@@ -1,6 +1,6 @@
 /*
  *      hptUtil - purge, pack, link and sort utility for HPT
- *      by Fedor Lizunkov 2:5020/960@Fidonet
+ *      by Fedor Lizunkov 2:5020/960@Fidonet and val khokhlov 2:550/180@fidonet
  *
  * This file is part of HPT.
  *

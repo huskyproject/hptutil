@@ -1,6 +1,6 @@
 /*
  *      hptUtil - purge, pack, link and sort utility for HPT
- *      by Fedor Lizunkov 2:5020/960@Fidonet
+ *      by Fedor Lizunkov 2:5020/960@Fidonet and val khokhlov 2:550/180@fidonet
  *
  * This file is part of HPT.
  *
@@ -456,8 +456,6 @@ void JamPackArea(char *areaName)
       read_hdrinfo(HdrHandle, &HdrInfo);
       write_hdrinfo(NewHdrHandle, &HdrInfo);
 
-      read(LrdHandle, &LastReadInfo, sizeof(LastReadInfo));
-
       HdrInfo.ActiveMsgs = 0; delta = HdrInfo.BaseMsgNum - 1;
 
       numinfo = (dword*)calloc(oldmsgs, sizeof(dword));
@@ -535,11 +533,15 @@ void JamPackArea(char *areaName)
       lseek(NewHdrHandle, 0L, SEEK_SET);
       write_hdrinfo(NewHdrHandle, &HdrInfo);
 
-      if (LastReadInfo.LastReadMsg > delta) LastReadInfo.LastReadMsg -= delta;
-        else LastReadInfo.LastReadMsg = 0;
-      if (LastReadInfo.HighReadMsg > delta) LastReadInfo.HighReadMsg -= delta;
-        else LastReadInfo.HighReadMsg = 0;
-      write(NewLrdHandle, &LastReadInfo, sizeof(LastReadInfo));
+      /* last read */
+      if (delta > 0) 
+        while (farread(LrdHandle, &LastReadInfo, sizeof(LastReadInfo)) > 0) {
+          if (LastReadInfo.LastReadMsg > delta) LastReadInfo.LastReadMsg -= delta;
+            else LastReadInfo.LastReadMsg = 0;
+          if (LastReadInfo.HighReadMsg > delta) LastReadInfo.HighReadMsg -= delta;
+            else LastReadInfo.HighReadMsg = 0;
+          farwrite(NewLrdHandle, &LastReadInfo, sizeof(LastReadInfo));
+        }
 
       nfree(numinfo);
       nfree(replyinfo);
