@@ -1,7 +1,7 @@
 CC       = gcc
 DEBUG    = 0
 
-OBJS    = sortarea.obj purgearea.obj packarea.obj linkarea.obj hptutil.obj
+OBJS    = sortarea.obj purgearea.obj packarea.obj linkarea.obj hptutil.obj fixarea.o undelete.o
 SRC_DIR = ./src/
 
 ifeq ($(DEBUG), 1)
