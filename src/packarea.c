@@ -47,13 +47,40 @@
 
 #include <jam.h>
 #include <squish.h>
+#include <hptutil.h>
 #include <packarea.h>
 
-extern FILE *outfile;
-extern int Open_File(char *name, word mode);
-extern int CheckMsg(JAMHDRptr Hdr);
-
 long oldmsgs;
+unsigned long areaOldSize, areaNewSize;
+unsigned long allOldSize, allNewSize;
+
+unsigned long areaSize(int h1, int h2, int h3)
+{
+    unsigned long size = 0;
+    long ofs;
+    
+    if (h1 != -1) {
+	ofs = tell(h1);
+	lseek(h1, 0L, SEEK_END);
+	size += tell(h1);
+	lseek(h1, ofs, SEEK_SET);
+    }
+    if (h2 != -1) {
+	ofs = tell(h2);
+	lseek(h2, 0L, SEEK_END);
+	size += tell(h2);
+	lseek(h2, ofs, SEEK_SET);
+    }
+    if (h3 != -1) {
+	ofs = tell(h3);
+	lseek(h3, 0L, SEEK_END);
+	size += tell(h3);
+	lseek(h3, ofs, SEEK_SET);
+    }
+    
+    return size;
+    
+}
 
 /* --------------------------SQUISH sector ON------------------------------- */
 
@@ -69,6 +96,8 @@ void SquishPackArea(char *areaName)
    SQHDR      sqhdr;
    XMSG       xmsg;
    SQIDX      sqidx;
+   
+   areaOldSize=areaNewSize = 0;
 
    sqd = (char*)malloc(strlen(areaName)+5);
    sqi = (char*)malloc(strlen(areaName)+5);
@@ -92,6 +121,7 @@ void SquishPackArea(char *areaName)
       free(newsqi);
       return;
    } /* endif */
+   
    NewSqiHandle = Open_File(newsqi, fop_wpb);
    if (NewSqiHandle == -1) {
       free(sqd);
@@ -112,6 +142,7 @@ void SquishPackArea(char *areaName)
       close(NewSqiHandle);
       return;
    } /* endif */
+   
    SqiHandle = Open_File(sqi, fop_rpb);
    if (SqiHandle == -1) {
       free(sqd);
@@ -125,6 +156,9 @@ void SquishPackArea(char *areaName)
    } /* endif */
 
    if (lock(SqdHandle, 0, 1) == 0) {
+   
+      areaOldSize = areaSize(SqdHandle, SqiHandle, (int)-1);
+      
       lseek(SqiHandle, 0L, SEEK_END);
       oldmsgs = tell(SqiHandle)/SQIDX_SIZE;
       lseek(SqiHandle, 0L, SEEK_SET);
@@ -193,29 +227,43 @@ void SquishPackArea(char *areaName)
       write_sqbase(NewSqdHandle, &sqbase);
 
       unlock(SqdHandle, 0, 1);
+      
+      areaNewSize = areaSize(NewSqdHandle, NewSqiHandle, (int)-1);
 
       close(NewSqdHandle);
       close(NewSqiHandle);
+      
       close(SqdHandle);
       close(SqiHandle);
 
       remove(sqd);
       remove(sqi);
+      
       rename(newsqd, sqd);
       rename(newsqi, sqi);
 
    } else {
+      areaOldSize = areaSize(SqdHandle, SqiHandle, (int)-1);
+      areaNewSize = areaSize(NewSqdHandle, NewSqiHandle, (int)-1);
+      
       close(NewSqdHandle);
       close(NewSqiHandle);
+      
       close(SqdHandle);
       close(SqiHandle);
+      
+      remove(newsqd);
+      remove(newsqi);
 
    } /* endif */
 
    free(sqd);
    free(sqi);
+   
    free(newsqd);
    free(newsqi);
+   
+   return;
 }
 
 /* --------------------------SQUISH sector OFF------------------------------ */
@@ -239,6 +287,8 @@ void JamPackArea(char *areaName)
    JAMHDR     PackHdr;
    JAMIDXREC  PackIdx;
    JAMSUBFIELDptr Subf;
+   
+   areaOldSize = areaNewSize = 0;
 
    hdr = (char*)malloc(strlen(areaName)+5);
    idx = (char*)malloc(strlen(areaName)+5);
@@ -268,6 +318,7 @@ void JamPackArea(char *areaName)
       free(newtxt);
       return;
    } /* endif */
+   
    NewIdxHandle = Open_File(newidx, fop_wpb);
    if (NewIdxHandle == -1) {
       free(hdr);
@@ -279,6 +330,7 @@ void JamPackArea(char *areaName)
       close(NewHdrHandle);
       return;
    } /* endif */
+   
    NewTxtHandle = Open_File(newtxt, fop_wpb);
    if (NewTxtHandle == -1) {
       free(hdr);
@@ -291,7 +343,7 @@ void JamPackArea(char *areaName)
       close(NewIdxHandle);
       return;
    } /* endif */
-
+   
    HdrHandle = Open_File(hdr, fop_rpb);
    if (NewHdrHandle == -1) {
       free(hdr);
@@ -305,6 +357,7 @@ void JamPackArea(char *areaName)
       close(NewTxtHandle);
       return;
    } /* endif */
+   
    IdxHandle = Open_File(idx, fop_rpb);
    if (NewIdxHandle == -1) {
       free(hdr);
@@ -319,6 +372,7 @@ void JamPackArea(char *areaName)
       close(HdrHandle);
       return;
    } /* endif */
+   
    TxtHandle = Open_File(txt, fop_rpb);
    if (NewTxtHandle == -1) {
       free(hdr);
@@ -337,6 +391,9 @@ void JamPackArea(char *areaName)
 
 
    if (lock(HdrHandle, 0, 1) == 0) {
+   
+      areaOldSize = areaSize(HdrHandle, IdxHandle, TxtHandle);
+   
       lseek(IdxHandle, 0L, SEEK_END);
       oldmsgs = tell(IdxHandle) / IDX_SIZE;
       lseek(IdxHandle, 0L, SEEK_SET);
@@ -425,6 +482,8 @@ void JamPackArea(char *areaName)
       free(replyinfo);
 
       unlock(HdrHandle, 0, 1);
+      
+      areaNewSize = areaSize(NewHdrHandle, NewIdxHandle, NewTxtHandle);
 
       close(NewHdrHandle);
       close(NewIdxHandle);
@@ -442,18 +501,27 @@ void JamPackArea(char *areaName)
       rename(newtxt, txt);
 
    } else {
+      areaOldSize = areaSize(HdrHandle, IdxHandle, TxtHandle);
+      areaNewSize = areaSize(NewHdrHandle, NewIdxHandle, NewTxtHandle);
+      
       close(NewHdrHandle);
       close(NewIdxHandle);
       close(NewTxtHandle);
+      
       close(HdrHandle);
       close(IdxHandle);
       close(TxtHandle);
+      
+      remove(newhdr);
+      remove(newidx);
+      remove(newtxt);
 
    } /* endif */
 
    free(newhdr);
    free(newidx);
    free(newtxt);
+   
    free(hdr);
    free(idx);
    free(txt);
@@ -466,23 +534,23 @@ void JamPackArea(char *areaName)
 void packArea(s_area *area)
 {
    int make = 0;
-   if (area->nopack) fprintf(outfile, "has nopack option ... ");
+   if (area->nopack) OutScreen("has nopack option ... ");
    else {
 	   if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
-		   fprintf(outfile, "is JAM ... ");
+		   OutScreen("is JAM ... ");
 		   JamPackArea(area->fileName);
 		   make = 1;
 	   } else {
 		   if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
-			   fprintf(outfile, "is Squish ... ");
+			   OutScreen("is Squish ... ");
 			   SquishPackArea(area->fileName);
 			   make = 1;
 		   } else {
 			   if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
-				   fprintf(outfile, "is MSG ... ");
+				   OutScreen("is MSG ... ");
 			   } else {
 				   if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
-					   fprintf(outfile, "is PASSTHROUGH ... ");
+					   OutScreen("is PASSTHROUGH ... ");
 				   } else {
 				   } /* endif */
 			   } /* endif */
@@ -491,39 +559,104 @@ void packArea(s_area *area)
    }   
 
    if (make) {
-	   fprintf(outfile, "Done\n");
+	   OutScreen("%01lu.%lu Kb [%01lu.%lu Kb]\n", areaNewSize/1000, areaNewSize%1000,
+	   areaOldSize/1000, areaOldSize%1000);
    } else {
-	   fprintf(outfile, "Ignore\n");
+	   OutScreen("Ignore\n");
    } /* endif */
 }
 
 void packAreas(s_fidoconfig *config)
 {
    int  i;
+   char *areaname;
 
-   outfile=stdout;
+   FILE *f;
+   
+   allOldSize = allNewSize = 0;
 
-   setbuf(outfile, NULL);
+   OutScreen("Pack areas begin\n");
+   
+   if (altImportLog) {
 
-   fprintf(outfile, "\nPack areas begin\n");
+      f = fopen(altImportLog, "rt");
+      if (f) {
+         OutScreen("Purge from \'%s\' alternative importlog file\n", altImportLog);
+         while ((areaname = readLine(f)) != NULL) {
+
+	    // EchoAreas
+	    for (i = 0; i < config->echoAreaCount; i++) {
+		if (stricmp(config->echoAreas[i].areaName, areaname) == 0) {
+		    OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
+		    packArea(&(config->echoAreas[i]));
+		    allOldSize += areaOldSize;
+		    allNewSize += areaNewSize;
+		}
+	    } /* endfor */
+
+	    // LocalAreas
+	    for (i = 0; i < config->localAreaCount; i++) {
+		if (stricmp(config->localAreas[i].areaName, areaname) == 0) {
+		    OutScreen("LocalArea %s ", config->localAreas[i].areaName);
+		    packArea(&(config->localAreas[i]));
+		    allOldSize += areaOldSize;
+		    allNewSize += areaNewSize;
+		}
+	    } /* endfor */
+
+	    // NetAreas
+	    for (i = 0; i < config->netMailAreaCount; i++) {
+		if (stricmp(config->netMailAreas[i].areaName, areaname) == 0) {
+		    OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
+		    packArea(&(config->netMailAreas[i]));
+		    allOldSize += areaOldSize;
+		    allNewSize += areaNewSize;
+		}
+	    }
+        
+	    free(areaname);
+
+	 } /* endwhile */
+
+         fclose(f);
+         if (stricmp(config->LinkWithImportlog, "kill")==0 && keepImportLog == 0) remove(altImportLog);
+	 OutScreen("Pack areas end\n");
+         OutScreen("Old base size - %01lu.%lu Kb, new base size - %01lu.%lu Kb\n\n",
+                    allOldSize/1000, allOldSize%1000,
+	            allNewSize/1000, allNewSize%1000);
+         return;
+      } /* endif */
+   } else {
+   } /* endif */
+   
+
 
    // EchoAreas
    for (i = 0; i < config->echoAreaCount; i++) {
-      fprintf(outfile, "EchoArea %s ", config->echoAreas[i].areaName);
+      OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
       packArea(&(config->echoAreas[i]));
+      allOldSize += areaOldSize;
+      allNewSize += areaNewSize;
    } /* endfor */
 
    // LocalAreas
    for (i = 0; i < config->localAreaCount; i++) {
-      fprintf(outfile, "LocalArea %s ", config->localAreas[i].areaName);
+      OutScreen("LocalArea %s ", config->localAreas[i].areaName);
       packArea(&(config->localAreas[i]));
+      allOldSize += areaOldSize;
+      allNewSize += areaNewSize;
    } /* endfor */
 
    // NetAreas
    for (i = 0; i < config->netMailAreaCount; i++) {
-      fprintf(outfile, "NetArea %s ", config->netMailAreas[i].areaName);
+      OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
       packArea(&(config->netMailAreas[i]));
+      allOldSize += areaOldSize;
+      allNewSize += areaNewSize;
    } /* endfor */
 
-   fprintf(outfile, "Pack areas end\n");
+   OutScreen("Pack areas end\n");
+   OutScreen("Old base size - %01lu.%lu Kb, new base size - %01lu.%lu Kb\n\n",
+              allOldSize/1000, allOldSize%1000,
+	      allNewSize/1000, allNewSize%1000);
 }

@@ -48,11 +48,9 @@
 
 #include <jam.h>
 #include <squish.h>
+#include <hptutil.h>
 #include <sortarea.h>
 
-extern FILE *outfile;
-extern int Open_File(char *name, word mode);
-extern int CheckMsg(JAMHDRptr Hdr);
 
 /* --------------------------SQUISH sector ON------------------------------- */
 
@@ -112,36 +110,39 @@ void freesqsort(SQSORTptr sqsort)
    free(sqsort);
 }
 
-void SortSquishArea(SQSORTptr sqsort, int SqdHandle, int SqiHandle, SQBASEptr sqbase, long idxPos, UMSGID umsgid)
+unsigned int SortSquishArea(SQSORTptr sqsort, int SqdHandle, int SqiHandle, SQBASEptr sqbase, long idxPos, UMSGID umsgid)
 {
    SQSORTptr psqsort = sqsort;
-   int i;
+   unsigned int i = 0;
 
    if (sqsort == NULL) {
-      return;
+      return i;
    } /* endif */
 
    lseek(SqiHandle, idxPos, SEEK_SET);
 
    while (psqsort) {
       psqsort->xmsg.replyto = 0;
-      for (i = 0; i < MAX_REPLY; i++) {
-         psqsort->xmsg.replies[i] = 0;
-      } /* endfor */
+      memset(psqsort->xmsg.replies, '\000', sizeof(UMSGID)*MAX_REPLY);
+      psqsort->xmsg.umsgid = umsgid;
       lseek(SqdHandle, psqsort->sqidx.ofs+SQHDR_SIZE, SEEK_SET);
       write_xmsg(SqdHandle, &(psqsort->xmsg));
       psqsort->sqidx.umsgid = umsgid++;
       write_sqidx(SqiHandle, &(psqsort->sqidx), 1);
       psqsort = psqsort->next;
+      i++;
    } /* endwhile */
+   
+   return i;
 }
 
-void SquishSortArea(s_area *area)
+unsigned int SquishSortArea(s_area *area)
 {
    int       SqdHandle;
    int       SqiHandle;
    int       SqlHandle;
-   long      i, msgs, idxPos;
+   unsigned  int SortMsgs;
+   long      i, msgs, idxPos, users;
 
    SQBASE    sqbase;
 //   SQHDR     sqhdr;
@@ -150,9 +151,9 @@ void SquishSortArea(s_area *area)
    SQSORTptr sqsort = NULL;
 
    dword     lastread;
-   UMSGID    umsgid, firstumsgid = 0;
+   UMSGID    umsgid, umsgidTMP, firstumsgid = 0;
 
-   char      *sqd, *sqi, *sql, *ptr;
+   char      *sqd, *sqi, *sql;
 
    sqd = (char*)malloc(strlen(area->fileName)+5);
    sqi = (char*)malloc(strlen(area->fileName)+5);
@@ -168,7 +169,7 @@ void SquishSortArea(s_area *area)
    if (SqdHandle == -1) {
       free(sqi);
       free(sql);
-      return;
+      return 0;
    } /* endif */
       
    SqiHandle = Open_File(sqi, fop_rpb);
@@ -177,24 +178,26 @@ void SquishSortArea(s_area *area)
    if (SqiHandle == -1) {
       free(sql);
       close(SqdHandle);
-      return;
+      return 0;
    } /* endif */
 
    SqlHandle = Open_File(sql, fop_rpb);
    free(sql);
 
-   if (SqlHandle == -1) {
-      umsgid = 0;
-   } else {
-      if (lseek(SqlHandle, 0L, SEEK_SET) == -1) {
-         umsgid = 0;
-      } else {
-         ptr = (char*)calloc(sizeof(dword)+1, sizeof(char));
-         farread(SqlHandle, ptr, sizeof(dword));
-         umsgid = get_dword(ptr);
-         free(ptr);
-      } /* endif */
-   } /* endif */
+   umsgid = 0;
+   if (SqlHandle != -1) {
+      if (lseek(SqlHandle, 0L, SEEK_END) != -1) {
+         users = (tell(SqlHandle))/sizeof(dword);
+	 lseek(SqlHandle, 0L, SEEK_SET);
+	 for (i = 0; i < users; i++) {
+            sql = (char*)calloc(sizeof(dword), sizeof(char));
+            farread(SqlHandle, sql, sizeof(dword));
+            umsgidTMP = get_dword(sql);
+            free(sql);
+	    if (umsgid < umsgidTMP) umsgid = umsgidTMP;
+	 }
+      }
+   }
 
    if (lock(SqdHandle, 0, 1) == 0) {
       lseek(SqdHandle, 0L, SEEK_SET);
@@ -213,8 +216,8 @@ void SquishSortArea(s_area *area)
          } /* endif */
       } /* endfor */
 
-      lseek(SqiHandle, lastread*SQIDX_SIZE, SEEK_SET);
-      idxPos = tell(SqiHandle);
+      idxPos = lastread*SQIDX_SIZE;
+      lseek(SqiHandle, idxPos, SEEK_SET);
 
       for (i = lastread; i < msgs; i++) {
          read_sqidx(SqiHandle, &(sqidx), 1);
@@ -230,7 +233,7 @@ void SquishSortArea(s_area *area)
 
       } /* endfor */
 
-      SortSquishArea(sqsort, SqdHandle, SqiHandle, &sqbase, idxPos, firstumsgid);
+      SortMsgs = SortSquishArea(sqsort, SqdHandle, SqiHandle, &sqbase, idxPos, firstumsgid);
 
       freesqsort(sqsort);
 
@@ -242,6 +245,8 @@ void SquishSortArea(s_area *area)
    if (SqlHandle != -1) {
       close(SqlHandle);
    } /* endif */
+   
+   return SortMsgs;
 
 }
 /* --------------------------SQUISH sector OFF------------------------------ */
@@ -301,9 +306,10 @@ void freejamsort(JAMSORTptr jamsort)
    free(jamsort);
 }
 
-void SortJamArea(JAMSORTptr jamsort, int IdxHandle, int HdrHandle, long idxPos, long firstnum)
+unsigned int SortJamArea(JAMSORTptr jamsort, int IdxHandle, int HdrHandle, long idxPos, long firstnum)
 {
    JAMSORTptr pjamsort = jamsort;
+   unsigned int i = 0;
 
    lseek(IdxHandle, idxPos, SEEK_SET);
    while (pjamsort) {
@@ -313,21 +319,24 @@ void SortJamArea(JAMSORTptr jamsort, int IdxHandle, int HdrHandle, long idxPos, 
       write_hdr(HdrHandle, &(pjamsort->Hdr));
       write_idx(IdxHandle, &(pjamsort->Idx));
       pjamsort = pjamsort->next;
+      i++;
    } /* endwhile */
    chsize(IdxHandle, tell(IdxHandle));
 
+   return i;
 }
 
-void JamSortArea(s_area *area)
+unsigned int JamSortArea(s_area *area)
 {
    int        IdxHandle;
    int        HdrHandle;
    int        LrdHandle;
+   unsigned   int SortMsgs;
    long       i, msgs, idxPos, firstnum;
 
-   dword      lastread;
+   dword      lastread, lstrdTMP, users;
 
-   char       *hdr, *idx, *lrd, *ptr;
+   char       *hdr, *idx, *lrd;
 
    JAMHDRINFO HdrInfo;
    JAMHDR     SortHdr;
@@ -349,7 +358,7 @@ void JamSortArea(s_area *area)
 
    if (IdxHandle == -1) {
       free(hdr);
-      return;
+      return 0;
    } /* endif */
 
    HdrHandle = Open_File(hdr, fop_rpb);
@@ -358,23 +367,27 @@ void JamSortArea(s_area *area)
 
    if (HdrHandle == -1) {
       close(IdxHandle);
-      return;
+      return 0;
    } /* endif */
 
    LrdHandle = Open_File(lrd, fop_rpb);
+   
+   free(lrd);
 
-   if (LrdHandle == -1) {
-      lastread = 0;
-   } else {
-      if (lseek(LrdHandle, 2*sizeof(dword), SEEK_SET) == -1) {
-         lastread = 0;
-      } else {
-         ptr = (char*)calloc(sizeof(dword)+1, sizeof(char));
-         farread(LrdHandle, ptr, sizeof(dword));
-         lastread = get_dword(ptr);
-         free(ptr);
-      } /* endif */
-   } /* endif */
+   lastread = 0;
+   if (LrdHandle != -1) {
+      if (lseek(LrdHandle, 0L, SEEK_END) != -1) {
+         users = (tell(LrdHandle))/sizeof(JAMLREAD);
+	 lseek(LrdHandle, 0L, SEEK_SET);
+	 for (i = 0; i < users; i++) {
+            lrd = (char*)calloc(sizeof(JAMLREAD), sizeof(char));
+            farread(LrdHandle, lrd, sizeof(JAMLREAD));
+            lstrdTMP = get_dword(lrd+8);
+            free(lrd);
+	    if (lastread < lstrdTMP) lastread = lstrdTMP;
+	 }
+      }
+   }
 
    if (lock(HdrHandle, 0, 1) == 0) {
       lseek(HdrHandle, 0L, SEEK_SET);
@@ -414,7 +427,7 @@ void JamSortArea(s_area *area)
 
       } /* endfor */
 
-      SortJamArea(jamsort, IdxHandle, HdrHandle, idxPos, firstnum);
+      SortMsgs = SortJamArea(jamsort, IdxHandle, HdrHandle, idxPos, firstnum);
 
       freejamsort(jamsort);
 
@@ -429,7 +442,7 @@ void JamSortArea(s_area *area)
       close(LrdHandle);
    } /* endif */
 
-   return;
+   return SortMsgs;
 }
 
 /* --------------------------JAM sector OFF--------------------------------- */
@@ -438,23 +451,25 @@ void JamSortArea(s_area *area)
 void sortArea(s_area *area)
 {
    int make = 0;
+   unsigned int SortMsgs = 0;
+   
    if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
-      fprintf(outfile, "is JAM ... ");
-      JamSortArea(area);
+      OutScreen("is JAM ... ");
+      SortMsgs = JamSortArea(area);
       make = 1;
    } else {
       if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
-         fprintf(outfile, "is Squish ... ");
-         SquishSortArea(area);
+         OutScreen("is Squish ... ");
+         SortMsgs = SquishSortArea(area);
          make = 1;
       } else {
          if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
-            fprintf(outfile, "is MSG ... ");
+            OutScreen("is MSG ... ");
 //            MsgSortArea(area);
             make = 1;
          } else {
             if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
-               fprintf(outfile, "is PASSTHROUGH ... ");
+               OutScreen("is PASSTHROUGH ... ");
             } else {
             } /* endif */
          } /* endif */
@@ -462,9 +477,10 @@ void sortArea(s_area *area)
    } /* endif */
 
    if (make) {
-      fprintf(outfile, "Done\n");
+      if (SortMsgs) OutScreen("%d msgs sorted\n", SortMsgs);
+      else OutScreen("Nothing to sort\n");
    } else {
-      fprintf(outfile, "Ignore\n");
+      OutScreen("Ignore\n");
    } /* endif */
 }
 
@@ -477,24 +493,20 @@ void sortAreas(s_fidoconfig *config)
 
    FILE   *f;
 
-   outfile=stdout;
-
-   setbuf(outfile, NULL);
-
-   fprintf(outfile, "\nSort areas begin\n");
+   OutScreen("\nSort areas begin\n");
 
    if (config->importlog) {
 
       f = fopen(config->importlog, "rt");
 
       if (f) {
-         fprintf(outfile, "Sort from \'importlog\'\n");
+         OutScreen("Sort from \'%s\' importlog file\n", config->importlog);
          while ((areaname = readLine(f)) != NULL) {
 
             // EchoAreas
             for (i = 0; i < config->echoAreaCount; i++) {
                if (stricmp(config->echoAreas[i].areaName, areaname) == 0) {
-                  fprintf(outfile, "EchoArea %s ", config->echoAreas[i].areaName);
+                  OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
                   sortArea(&(config->echoAreas[i]));
                } else {
                } /* endif */
@@ -503,7 +515,7 @@ void sortAreas(s_fidoconfig *config)
             // LocalAreas
             for (i = 0; i < config->localAreaCount; i++) {
                if (stricmp(config->localAreas[i].areaName, areaname) == 0) {
-                  fprintf(outfile, "LocalArea %s ", config->localAreas[i].areaName);
+                  OutScreen("LocalArea %s ", config->localAreas[i].areaName);
                   sortArea(&(config->localAreas[i]));
                } else {
                } /* endif */
@@ -512,7 +524,7 @@ void sortAreas(s_fidoconfig *config)
             // NetAreas
             for (i = 0; i < config->netMailAreaCount; i++) {
                if (stricmp(config->netMailAreas[i].areaName, areaname) == 0) {
-                  fprintf(outfile, "NetArea %s ", config->netMailAreas[i].areaName);
+                  OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
                   sortArea(&(config->netMailAreas[i]));
                } else {
                } /* endif */
@@ -523,29 +535,31 @@ void sortAreas(s_fidoconfig *config)
          } /* endwhile */
 
          fclose(f);
-         fprintf(outfile, "Sort areas end\n");
+         OutScreen("Sort areas end\n\n");
          return;
-      } /* endif */
+      } else {
+      }
+      
    } else {
    } /* endif */
 
    // EchoAreas
    for (i = 0; i < config->echoAreaCount; i++) {
-      fprintf(outfile, "EchoArea %s ", config->echoAreas[i].areaName);
+      OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
       sortArea(&(config->echoAreas[i]));
    } /* endfor */
 
    // LocalAreas
    for (i = 0; i < config->localAreaCount; i++) {
-      fprintf(outfile, "LocalArea %s ", config->localAreas[i].areaName);
+      OutScreen("LocalArea %s ", config->localAreas[i].areaName);
       sortArea(&(config->localAreas[i]));
    } /* endfor */
 
    // NetAreas
    for (i = 0; i < config->netMailAreaCount; i++) {
-      fprintf(outfile, "NetArea %s ", config->netMailAreas[i].areaName);
+      OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
       sortArea(&(config->netMailAreas[i]));
    } /* endfor */
 
-   fprintf(outfile, "Sort areas end\n");
+   OutScreen("Sort areas end\n\n");
 }

@@ -1,6 +1,8 @@
 #ifndef __LINKAREA_H__
 #define __LINKAREA_H__
 
+#include <squish.h>
+
 typedef struct {
    char  *reply;
    char  *msgid;
@@ -8,17 +10,24 @@ typedef struct {
    dword Reply1st;
    dword ReplyNext;
    dword msgnum;
+   FOFS  HdrOffset;
    char  rewrite;
+   dword ReplyToOld;
+   dword Reply1stOld;
+   dword ReplyNextOld;
 } JAMINFO, *JAMINFOptr, **JAMINFOpptr;
 
 typedef struct {
    char   *reply;
    char   *msgid;
    UMSGID replyto;
-   int    repliesCount;
+   dword  repliesCount;
    UMSGID replies[MAX_REPLY];
    UMSGID msgnum;
-   char   rewrite;
+   FOFS   PosSqd;
+   byte   rewrite;
+   UMSGID replytoOld;
+   UMSGID repliesOld[MAX_REPLY];
 } SQINFO, *SQINFOptr, **SQINFOpptr;
 
 void linkAreas(s_fidoconfig *config);

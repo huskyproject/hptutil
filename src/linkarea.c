@@ -48,12 +48,11 @@
 
 #include <jam.h>
 #include <squish.h>
+#include <hptutil.h>
 #include <linkarea.h>
 
 
-FILE *outfile;
 int  linkmsgs;
-extern char keepImportLog;
 
 int Open_File(char *name, word mode)
 {
@@ -75,22 +74,16 @@ char *GetOnlyId(char *Id)
    if (Id == NULL) {
       return NULL;
    } /* endif */
-
-   ptr = Id+strlen(Id)-1;
-   while (*ptr == ' ') *(ptr--) = '\0';
-
-   if (*Id == '\0') {
-      return Id;
-   } /* endif */
-
-   ptr = strrchr(Id, ' ');
+   
+   ptr = strchr(Id, ' ');
    if (ptr) {
       str = strdup(ptr);
       free(Id);
       return str;
    } else {
       return Id;
-   } /* endif */
+   }
+
 }
 
 /* --------------------------SQUISH sector ON------------------------------- */
@@ -100,7 +93,6 @@ void SquishLinkArea(char *areaName)
    int        SqdHandle;
    int        SqiHandle;
    long       i, ii, msgs;
-   FOFS       PosSqd;
 
    SQBASE     sqbase;
    SQHDR      sqhdr;
@@ -152,17 +144,23 @@ void SquishLinkArea(char *areaName)
          read_sqhdr(SqdHandle, &sqhdr);
          if (sqhdr.id != SQHDRID) continue;
          if (sqhdr.frame_type != FRAME_normal) continue;
-         read_xmsg(SqdHandle, &xmsg);
+	 
+         msginfo[i] = (SQINFOptr)calloc(1, sizeof(SQINFO));
+	 
+	 msginfo[i]->PosSqd = tell(SqdHandle);
+	 
+	 read_xmsg(SqdHandle, &xmsg);
 
+	 msginfo[i]->replytoOld = xmsg.replyto;	 
+	 memmove(msginfo[i]->repliesOld, xmsg.replies, sizeof(UMSGID)*MAX_REPLY);
+	 
          ctrl = (char*)calloc(sqhdr.clen+1, sizeof(char));
 
          farread(SqdHandle, ctrl, sqhdr.clen);
 
-         msginfo[i] = (SQINFOptr)calloc(1, sizeof(SQINFO));
-
-
          msginfo[i]->msgid = GetCtrlToken(ctrl, "MSGID: ");
          msginfo[i]->reply = GetCtrlToken(ctrl, "REPLY: ");
+	 
 
          msginfo[i]->msgid = GetOnlyId(msginfo[i]->msgid);
          msginfo[i]->reply = GetOnlyId(msginfo[i]->reply);
@@ -172,7 +170,7 @@ void SquishLinkArea(char *areaName)
          free(ctrl);
 
       } /* endfor */
-
+      
       for (i = 0; i < msgs; i++) {
          for (ii = 0; ii < msgs && msginfo[i]; ii++) {
             if (ii == i) {
@@ -184,12 +182,15 @@ void SquishLinkArea(char *areaName)
                      if (strcmp(msginfo[i]->msgid, msginfo[ii]->reply) == 0) {
                         if (msginfo[i]->repliesCount < (MAX_REPLY - 1)) {
                            msginfo[i]->replies[msginfo[i]->repliesCount] = msginfo[ii]->msgnum;
+			   if (msginfo[i]->replies[msginfo[i]->repliesCount] != 
+			   msginfo[i]->repliesOld[msginfo[i]->repliesCount])
+                              msginfo[i]->rewrite = 1;
                            msginfo[i]->repliesCount++;
-                           msginfo[i]->rewrite = 1;
                         } else {
                         } /* endif */
                         msginfo[ii]->replyto = msginfo[i]->msgnum;
-                        msginfo[ii]->rewrite = 1;
+			if (msginfo[ii]->replyto != msginfo[ii]->replytoOld)
+                           msginfo[ii]->rewrite = 1;
                      } else {
                      } /* endif */
                   } else {
@@ -205,29 +206,25 @@ void SquishLinkArea(char *areaName)
 
       for (i = 0, linkmsgs = 0; i < msgs; i++) {
          if (!msginfo[i]) continue;
-
-         if (msginfo[i]->rewrite == 0) {
-            lseek(SqiHandle, SQIDX_SIZE, SEEK_CUR);
-            continue;
-         } else {
-         } /* endif */
-         read_sqidx(SqiHandle, &sqidx, 1);
-         if (sqidx.ofs == 0 || sqidx.ofs == -1) continue;
-         if (lseek(SqdHandle, sqidx.ofs, SEEK_SET) == -1) continue;
-
-         read_sqhdr(SqdHandle, &sqhdr);
-         if (sqhdr.id != SQHDRID) continue;
-         if (sqhdr.frame_type != FRAME_normal) continue;
-
-         PosSqd = tell(SqdHandle);
-         read_xmsg(SqdHandle, &xmsg);
-         xmsg.replyto = msginfo[i]->replyto;
-         for (ii = 0; ii < MAX_REPLY; ii++) {
-            xmsg.replies[ii] = msginfo[i]->replies[ii];
-         } /* endfor */
-         lseek(SqdHandle, PosSqd, SEEK_SET);
-         write_xmsg(SqdHandle, &xmsg);
-         linkmsgs++;
+	 
+	 if (msginfo[i]->rewrite == 1) {
+	 
+            if (lseek(SqdHandle, msginfo[i]->PosSqd, SEEK_SET) != -1) {
+	 
+		read_xmsg(SqdHandle, &xmsg);
+	       
+		xmsg.replyto = msginfo[i]->replyto;
+		memmove(xmsg.replies, msginfo[i]->replies, sizeof(UMSGID)*MAX_REPLY);
+		  
+		lseek(SqdHandle, msginfo[i]->PosSqd, SEEK_SET);
+		write_xmsg(SqdHandle, &xmsg);
+		  
+		linkmsgs++;
+	    } else {
+	       fprintf(fileserr, "loop - %ld, Not seek SqdHanle in pos - %lx\n", i, msginfo[i]->PosSqd);
+	    }
+	 
+	 }
 
          free(msginfo[i]->msgid);
          free(msginfo[i]->reply);
@@ -296,8 +293,7 @@ void JamLinkArea(char *areaName)
    JAMHDR     LinkHdr;
    JAMIDXREC  LinkIdx;
    JAMSUBFIELDptr Subf, MsgIdSub, ReplySub;
-
-
+   
    JAMINFOpptr msginfo = NULL;
 
    hdr = (char*)malloc(x=strlen(areaName)+5);
@@ -345,18 +341,25 @@ void JamLinkArea(char *areaName)
          if (CheckMsg(&LinkHdr) == 0) {
             continue;
          } /* endif */
+	 
 
          Subf = (JAMSUBFIELDptr)malloc(LinkHdr.SubfieldLen);
          read_subfield(HdrHandle, &Subf, &(LinkHdr.SubfieldLen));
          MsgIdSub = GetSubField(Subf, JAMSFLD_MSGID, LinkHdr.SubfieldLen);
          ReplySub = GetSubField(Subf, JAMSFLD_REPLYID, LinkHdr.SubfieldLen);
 
-         msginfo[i] = (JAMINFOptr)calloc(1, sizeof(JAMINFO));
-
          if (!MsgIdSub) {
             free(Subf);
             continue;
          } /* endif */
+
+         msginfo[i] = (JAMINFOptr)calloc(1, sizeof(JAMINFO));
+	 
+	 msginfo[i]->ReplyToOld = LinkHdr.ReplyTo;
+	 msginfo[i]->Reply1stOld = LinkHdr.Reply1st;
+	 msginfo[i]->ReplyNextOld = LinkHdr.ReplyNext;
+	 
+	 msginfo[i]->HdrOffset = LinkIdx.HdrOffset;
 
          msginfo[i]->msgid = (char*)calloc(MsgIdSub->DatLen+1, sizeof(char));
          strncpy(msginfo[i]->msgid, MsgIdSub->Buffer, MsgIdSub->DatLen);
@@ -385,10 +388,12 @@ void JamLinkArea(char *areaName)
                      if (strcmp(msginfo[i]->msgid, msginfo[ii]->reply) == 0) {
                         if (msginfo[i]->Reply1st == 0) {
                            msginfo[i]->Reply1st = msginfo[ii]->msgnum;
-                           msginfo[i]->rewrite = 1;
+			   if (msginfo[i]->Reply1st != msginfo[i]->Reply1stOld)
+                              msginfo[i]->rewrite = 1;
                         } /* endif */
                         msginfo[ii]->ReplyTo = msginfo[i]->msgnum;
-                        msginfo[ii]->rewrite = 1;
+			if (msginfo[ii]->ReplyTo != msginfo[ii]->ReplyToOld)
+                           msginfo[ii]->rewrite = 1;
                      } else {
                      } /* endif */
                   } else {
@@ -399,7 +404,8 @@ void JamLinkArea(char *areaName)
                    msginfo[ii]->ReplyTo != 0 && msginfo[i]->ReplyTo != 0 && 
                    ii > i && msginfo[i]->ReplyNext == 0) {
                   msginfo[i]->ReplyNext = msginfo[ii]->msgnum;
-                  msginfo[i]->rewrite = 1;
+		  if (msginfo[i]->ReplyNext != msginfo[i]->ReplyNextOld)
+                     msginfo[i]->rewrite = 1;
                } else {
                } /* endif */
             } else {
@@ -412,32 +418,22 @@ void JamLinkArea(char *areaName)
 
       for (i = 0, linkmsgs = 0; i < msgs; i++) {
          if (!msginfo[i]) continue;
+	 
+	 if (msginfo[i]->rewrite == 1) {
+            lseek(HdrHandle, msginfo[i]->HdrOffset, SEEK_SET);
+            read_hdr(HdrHandle, &LinkHdr);
+	    if (CheckMsg(&LinkHdr) == 1) {
+	       LinkHdr.ReplyTo = msginfo[i]->ReplyTo;
+               LinkHdr.Reply1st = msginfo[i]->Reply1st;
+               LinkHdr.ReplyNext = msginfo[i]->ReplyNext;
 
-         if (msginfo[i]->rewrite == 0) {
-            lseek(IdxHandle, IDX_SIZE, SEEK_CUR);
-            continue;
-         } /* endif */
+               lseek(HdrHandle, msginfo[i]->HdrOffset, SEEK_SET);
+               write_hdr(HdrHandle, &LinkHdr);
 
-         read_idx(IdxHandle, &LinkIdx);
-         if (LinkIdx.HdrOffset == 0xffffffff) {
-            continue;
-         } /* endif */
-         lseek(HdrHandle, LinkIdx.HdrOffset, SEEK_SET);
-         read_hdr(HdrHandle, &LinkHdr);
-
-         if (CheckMsg(&LinkHdr) == 0) {
-            continue;
-         } /* endif */
-
-         LinkHdr.ReplyTo = msginfo[i]->ReplyTo;
-         LinkHdr.Reply1st = msginfo[i]->Reply1st;
-         LinkHdr.ReplyNext = msginfo[i]->ReplyNext;
-
-         lseek(HdrHandle, LinkIdx.HdrOffset, SEEK_SET);
-         write_hdr(HdrHandle, &LinkHdr);
-
-         HdrInfo.ModCounter++;
-         linkmsgs++;
+               HdrInfo.ModCounter++;
+               linkmsgs++;
+	    }
+	 }
 
          free(msginfo[i]->msgid);
          free(msginfo[i]->reply);
@@ -465,23 +461,23 @@ void linkArea(s_area *area)
 {
    int make = 0;
    if (area->nolink) {
-      fprintf(outfile, "has nolink option ... ");
+      OutScreen("has nolink option ... ");
    } else {
       if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
-         fprintf(outfile, "is JAM ... ");
+         OutScreen("is JAM ... ");
          JamLinkArea(area->fileName);
          make = 1;
       } else {
          if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
-            fprintf(outfile, "is Squish ... ");
+            OutScreen("is Squish ... ");
             SquishLinkArea(area->fileName);
             make = 1;
          } else {
             if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
-               fprintf(outfile, "is MSG ... ");
+               OutScreen("is MSG ... ");
             } else {
                if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
-                  fprintf(outfile, "is PASSTHROUGH ... ");
+                  OutScreen("is PASSTHROUGH ... ");
                } else {
                } /* endif */
             } /* endif */
@@ -490,9 +486,9 @@ void linkArea(s_area *area)
    }
 
    if (make) {
-      fprintf(outfile, "Linked %d msgs\n", linkmsgs);
+      OutScreen("Linked %d msgs\n", linkmsgs);
    } else {
-      fprintf(outfile, "Ignore\n");
+      OutScreen("Ignore\n");
    } /* endif */
 }
 
@@ -503,11 +499,7 @@ void linkAreas(s_fidoconfig *config)
 
    FILE   *f;
 
-   outfile=stdout;
-
-   setbuf(outfile, NULL);
-
-   fprintf(outfile, "\nLink areas begin\n");
+   OutScreen("Link areas begin\n");
    if (config->importlog) {
 
       if ((config->LinkWithImportlog != NULL) && (stricmp(config->LinkWithImportlog, "no")!=0)){
@@ -516,13 +508,13 @@ void linkAreas(s_fidoconfig *config)
          f = NULL;
       }
       if (f) {
-         fprintf(outfile, "Link from \'importlog\'\n");
+         OutScreen("Link from \'%s\' importlog file\n", config->importlog);
          while ((areaname = readLine(f)) != NULL) {
 
             // EchoAreas
             for (i = 0; i < config->echoAreaCount; i++) {
                if (stricmp(config->echoAreas[i].areaName, areaname) == 0) {
-                  fprintf(outfile, "EchoArea %s ", config->echoAreas[i].areaName);
+                  OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
                   linkArea(&(config->echoAreas[i]));
                } else {
                } /* endif */
@@ -531,7 +523,7 @@ void linkAreas(s_fidoconfig *config)
             // LocalAreas
             for (i = 0; i < config->localAreaCount; i++) {
                if (stricmp(config->localAreas[i].areaName, areaname) == 0) {
-                  fprintf(outfile, "LocalArea %s ", config->localAreas[i].areaName);
+                  OutScreen("LocalArea %s ", config->localAreas[i].areaName);
                   linkArea(&(config->localAreas[i]));
                } else {
                } /* endif */
@@ -540,7 +532,7 @@ void linkAreas(s_fidoconfig *config)
             // NetAreas
             for (i = 0; i < config->netMailAreaCount; i++) {
                if (stricmp(config->netMailAreas[i].areaName, areaname) == 0) {
-                  fprintf(outfile, "NetArea %s ", config->netMailAreas[i].areaName);
+                  OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
                   linkArea(&(config->netMailAreas[i]));
                } else {
                } /* endif */
@@ -552,7 +544,7 @@ void linkAreas(s_fidoconfig *config)
 
          fclose(f);
          if (stricmp(config->LinkWithImportlog, "kill")==0 && keepImportLog == 0) remove(config->importlog);
-         fprintf(outfile, "Link areas end\n");
+         OutScreen("Link areas end\n\n");
          return;
       } /* endif */
    } else {
@@ -560,21 +552,21 @@ void linkAreas(s_fidoconfig *config)
 
    // EchoAreas
    for (i = 0; i < config->echoAreaCount; i++) {
-      fprintf(outfile, "EchoArea %s ", config->echoAreas[i].areaName);
+      OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
       linkArea(&(config->echoAreas[i]));
    } /* endfor */
 
    // LocalAreas
    for (i = 0; i < config->localAreaCount; i++) {
-      fprintf(outfile, "LocalArea %s ", config->localAreas[i].areaName);
+      OutScreen("LocalArea %s ", config->localAreas[i].areaName);
       linkArea(&(config->localAreas[i]));
    } /* endfor */
 
    // NetAreas
    for (i = 0; i < config->netMailAreaCount; i++) {
-      fprintf(outfile, "NetArea %s ", config->netMailAreas[i].areaName);
+      OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
       linkArea(&(config->netMailAreas[i]));
    } /* endfor */
 
-   fprintf(outfile, "Sort areas end\n");
+   OutScreen("Link areas end\n\n");
 }

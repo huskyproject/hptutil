@@ -48,11 +48,9 @@
 
 #include <jam.h>
 #include <squish.h>
+#include <hptutil.h>
 #include <linkarea.h>
 
-extern FILE *outfile;
-extern int Open_File(char *name, word mode);
-extern int CheckMsg(JAMHDRptr Hdr);
 
 /* --------------------------SQUISH sector ON------------------------------- */
 
@@ -113,7 +111,7 @@ void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
    int      SqdHandle;
    int      SqiHandle;
    int      SqlHandle;
-   long     i, msgs;
+   long     i, msgs, users;
 
    SQBASE   sqbase;
    SQHDR    sqhdr;
@@ -121,12 +119,12 @@ void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
    SQIDXptr sqidx;
 
    UMSGID   lastread;
-   UMSGID   umsgid;
+   UMSGID   umsgid, umsgidTMP;
    FOFS     frame_prev;
    FOFS     frame_next;
    FOFS     SqdPos;
 
-   char       *sqd, *sqi, *sql, *ptr;
+   char       *sqd, *sqi, *sql;
 
    struct tm tmTime;
    time_t curtime, msgtime;
@@ -160,18 +158,20 @@ void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
    SqlHandle = Open_File(sql, fop_rpb);
    free(sql);
 
-   if (SqlHandle == -1) {
-      umsgid = 0;
-   } else {
-      if (lseek(SqlHandle, 0L, SEEK_SET) == -1) {
-         umsgid = 0;
-      } else {
-         ptr = (char*)calloc(sizeof(dword)+1, sizeof(char));
-         farread(SqlHandle, ptr, sizeof(dword));
-         umsgid = get_dword(ptr);
-         free(ptr);
-      } /* endif */
-   } /* endif */
+   umsgid = 0;
+   if (SqlHandle != -1) {
+      if (lseek(SqlHandle, 0L, SEEK_END) != -1) {
+         users = (tell(SqlHandle))/sizeof(dword);
+	 lseek(SqlHandle, 0L, SEEK_SET);
+	 for (i = 0; i < users; i++) {
+            sql = (char*)calloc(sizeof(dword), sizeof(char));
+            farread(SqlHandle, sql, sizeof(dword));
+            umsgidTMP = get_dword(sql);
+            free(sql);
+	    if (umsgid > umsgidTMP) umsgid = umsgidTMP;
+	 }
+      }
+   }
 
    if (lock(SqdHandle, 0, 1) == 0) {
       lseek(SqdHandle, 0L, SEEK_SET);
@@ -299,11 +299,11 @@ void JamPurgeArea(s_area *area, long *oldmsgs, long *purged)
    int        IdxHandle;
    int        HdrHandle;
    int        LrdHandle;
-   long       i, msgs, idxPos;
+   long       i, msgs, users, idxPos;
 
-   dword      lastread;
+   dword      lastread, lstrdTMP;
 
-   char       *hdr, *idx, *lrd, *ptr;
+   char       *hdr, *idx, *lrd;
 
    JAMHDRINFO HdrInfo;
    JAMHDR     PurgeHdr;
@@ -343,18 +343,20 @@ void JamPurgeArea(s_area *area, long *oldmsgs, long *purged)
 
    LrdHandle = Open_File(lrd, fop_rpb);
 
-   if (LrdHandle == -1) {
-      lastread = 0;
-   } else {
-      if (lseek(LrdHandle, 2*sizeof(dword), SEEK_SET) == -1) {
-         lastread = 0;
-      } else {
-         ptr = (char*)calloc(sizeof(dword)+1, sizeof(char));
-         farread(LrdHandle, ptr, sizeof(dword));
-         lastread = get_dword(ptr);
-         free(ptr);
-      } /* endif */
-   } /* endif */
+   lastread = 0;
+   if (LrdHandle != -1) {
+      if (lseek(LrdHandle, 0L, SEEK_END) != -1) {
+         users = (tell(LrdHandle))/sizeof(JAMLREAD);
+	 lseek(LrdHandle, 0L, SEEK_SET);
+	 for (i = 0; i < users; i++) {
+            lrd = (char*)calloc(sizeof(JAMLREAD), sizeof(char));
+            farread(LrdHandle, lrd, sizeof(JAMLREAD));
+            lstrdTMP = get_dword(lrd+8);
+            free(lrd);
+	    if (lastread > lstrdTMP) lastread = lstrdTMP;
+	 }
+      }
+   }
 
    if (lock(HdrHandle, 0, 1) == 0) {
       lseek(HdrHandle, 0L, SEEK_SET);
@@ -444,25 +446,25 @@ void purgeArea(s_area *area, long *oldmsgs, long *purged)
    int make = 0;
    *purged = *oldmsgs = 0;
 
-   if (area->nopack) fprintf(outfile, "has nopack option ... ");
+   if (area->nopack) OutScreen("has nopack option ... ");
    else {
 	   if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
-		   fprintf(outfile, "is JAM ... ");
+		   OutScreen("is JAM ... ");
 		   JamPurgeArea(area, oldmsgs, purged);
 		   make = 1;
 	   } else {
 		   if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
-			   fprintf(outfile, "is Squish ... ");
+			   OutScreen("is Squish ... ");
 			   SquishPurgeArea(area, oldmsgs, purged);
 			   make = 1;
 		   } else {
 			   if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
-				   fprintf(outfile, "is MSG ... ");
+				   OutScreen("is MSG ... ");
 //            MsgPurgeArea(area, oldmsgs, purged);
 				   make = 1;
 			   } else {
 				   if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
-					   fprintf(outfile, "is PASSTHROUGH ... ");
+					   OutScreen("is PASSTHROUGH ... ");
 				   } else {
 				   } /* endif */
 			   } /* endif */
@@ -471,10 +473,10 @@ void purgeArea(s_area *area, long *oldmsgs, long *purged)
    }
 
    if (make) {
-	   fprintf(outfile, "%lu-%lu=%lu, ", *oldmsgs, *purged, *oldmsgs-*purged);
-	   fprintf(outfile, "Done\n");
+	   OutScreen("%lu-%lu=%lu, ", *oldmsgs, *purged, *oldmsgs-*purged);
+	   OutScreen("Done\n");
    } else {
-	   fprintf(outfile, "Ignore\n");
+	   OutScreen("Ignore\n");
    } /* endif */
 }
 
@@ -483,15 +485,71 @@ void purgeAreas(s_fidoconfig *config)
    int  i;
    long totoldmsgs = 0, totpurged = 0;
    long areaoldmsgs, areapurged;
+   
+   char *areaname;
+   FILE *f;
 
-   outfile=stdout;
 
-   setbuf(outfile, NULL);
+   OutScreen("Purge areas begin\n");
+   
+   
+   if (altImportLog) {
 
-   fprintf(outfile, "\nPurge areas begin\n");
+      f = fopen(altImportLog, "rt");
+      if (f) {
+         OutScreen("Purge from \'%s\' alternative importlog file\n", altImportLog);
+         while ((areaname = readLine(f)) != NULL) {
+
+	    // EchoAreas
+	    for (i = 0; i < config->echoAreaCount; i++) {
+		if (stricmp(config->echoAreas[i].areaName, areaname) == 0) {
+		    OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
+		    purgeArea(&(config->echoAreas[i]), &areaoldmsgs, &areapurged);
+		    totoldmsgs+=areaoldmsgs;
+		    totpurged+=areapurged;
+		}
+	    } /* endfor */
+
+	    // LocalAreas
+	    for (i = 0; i < config->localAreaCount; i++) {
+		if (stricmp(config->localAreas[i].areaName, areaname) == 0) {
+		    OutScreen("LocalArea %s ", config->localAreas[i].areaName);
+		    purgeArea(&(config->localAreas[i]), &areaoldmsgs, &areapurged);
+		    totoldmsgs+=areaoldmsgs;
+		    totpurged+=areapurged;
+		}
+	    } /* endfor */
+
+	    // NetAreas
+	    for (i = 0; i < config->netMailAreaCount; i++) {
+		if (stricmp(config->netMailAreas[i].areaName, areaname) == 0) {
+		    OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
+		    purgeArea(&(config->netMailAreas[i]), &areaoldmsgs, &areapurged);
+		    totoldmsgs+=areaoldmsgs;
+		    totpurged+=areapurged;
+		}
+	    }
+        
+	    free(areaname);
+
+	 } /* endwhile */
+
+         fclose(f);
+         if (stricmp(config->LinkWithImportlog, "kill")==0 && keepImportLog == 0) remove(altImportLog);
+	 OutScreen("Purge areas end\n");
+	 OutScreen("Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n\n", 
+              totoldmsgs, totpurged, totoldmsgs-totpurged);
+         return;
+      } /* endif */
+   } else {
+   } /* endif */
+   
+   
+   
+   
    // EchoAreas
    for (i = 0; i < config->echoAreaCount; i++) {
-      fprintf(outfile, "EchoArea %s ", config->echoAreas[i].areaName);
+      OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
       purgeArea(&(config->echoAreas[i]), &areaoldmsgs, &areapurged);
       totoldmsgs+=areaoldmsgs;
       totpurged+=areapurged;
@@ -499,7 +557,7 @@ void purgeAreas(s_fidoconfig *config)
 
    // LocalAreas
    for (i = 0; i < config->localAreaCount; i++) {
-      fprintf(outfile, "LocalArea %s ", config->localAreas[i].areaName);
+      OutScreen("LocalArea %s ", config->localAreas[i].areaName);
       purgeArea(&(config->localAreas[i]), &areaoldmsgs, &areapurged);
       totoldmsgs+=areaoldmsgs;
       totpurged+=areapurged;
@@ -507,14 +565,14 @@ void purgeAreas(s_fidoconfig *config)
 
    // NetAreas
    for (i = 0; i < config->netMailAreaCount; i++) {
-      fprintf(outfile, "NetArea %s ", config->netMailAreas[i].areaName);
+      OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
       purgeArea(&(config->netMailAreas[i]), &areaoldmsgs, &areapurged);
       totoldmsgs+=areaoldmsgs;
       totpurged+=areapurged;
    } /* endfor */
 
-   fprintf(outfile, "Purge areas end\n");
-   fprintf(outfile, "Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n", 
+   OutScreen("Purge areas end\n");
+   OutScreen("Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n\n", 
            totoldmsgs, totpurged, totoldmsgs-totpurged);
 }
 

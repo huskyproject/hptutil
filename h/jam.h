@@ -169,10 +169,11 @@ typedef struct
 #define fop_rpb (O_RDWR | O_BINARY)
 
 #define get_dword(ptr)            \
-   ((dword)((ptr)[0]) |           \
-    (((dword)((ptr)[1])) << 8)  | \
-    (((dword)((ptr)[2])) << 16) | \
-    (((dword)((ptr)[3])) << 24))  \
+   ((dword)((unsigned char)(ptr)[0]) |           \
+    (((dword)((unsigned char)(ptr)[1])) << 8)  | \
+    (((dword)((unsigned char)(ptr)[2])) << 16) | \
+    (((dword)((unsigned char)(ptr)[3])) << 24))  \
+
 
 int read_hdrinfo(sword handle, JAMHDRINFO *HdrInfo);
 int read_idx(sword handle, JAMIDXREC *Idx);

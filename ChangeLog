@@ -1,3 +1,16 @@
+hptutil 1.02
+---------------
+
+----- cvs ci ------
+Thu Sep 28 18:40:47 MSD 2000
+Fedor:
+* adapted sort and purge for multiuser mode (jam, squish)
+* optimization link
+* add quiet mode
+* work informations more
+* alternative 'import.log' file
+
+
 hptutil 1.01
 ---------------
 
