@@ -1,6 +1,6 @@
 CC       = gcc
 CFLAGS   = -c -g -O2 -DUNIX -I./h -I..
-LFLAGS   = -s -L../fidoconfig -L../smapi
+LFLAGS   = -s -L../fidoconf -L../smapi
 
 OBJS    = sortarea.o purgearea.o packarea.o linkarea.o hptutil.o
 SRC_DIR = src/
@@ -12,7 +12,7 @@ all: $(OBJS) \
 	$(CC) $(CFLAGS) $(SRC_DIR)$*.c
 
 hptutil: $(OBJS)
-	$(CC) $(LFLAGS) -o hptutil $(OBJS) -lsmapisun -lfidoconfig 
+	$(CC) $(LFLAGS) -o hptutil $(OBJS) -lsmapisun -lfidoconfigsun
 
 clean:
 	-rm -f *.o
