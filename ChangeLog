@@ -2,6 +2,11 @@ hptutil 1.01
 ---------------
 
 ----- cvs ci ------
+Sat Feb  5 02:36:03 NOVT 2000
+max:
+* added -zp=1 to makefile.wcw
+
+----- cvs ci ------
 Sat Jan 29 00:32:51 NOVT 2000
 max:
 * started ChangeLog
