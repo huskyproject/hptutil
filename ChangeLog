@@ -2,6 +2,11 @@ hptutil 1.02
 ---------------
 
 ----- cvs ci ------
+Wed Oct  4 09:30:26 MSD 2000
+Fedor:
+* fixed size of fixing file
+
+----- cvs ci ------
 Tue Oct  3 17:11:31 MSD 2000
 Fedor:
 * added fixing bad squish areas (jam in the future)

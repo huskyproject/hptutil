@@ -168,13 +168,14 @@ int SquishFixArea()
 	    
 	    if (read_xmsg(SqdHandle, &xmsg) == 0) break;
 	    xmsg.attr = 0;
-	    
+	    xmsg.replyto = 0;
+	    memset(xmsg.replies, '\000', sizeof(UMSGID)*MAX_REPLY);	    
 	    SqdPos1 = tell(SqdHandle);
 	    findHdrId(SqdHandle);
 	    SqdPos2 = tell(SqdHandle);
 	    text = (char*)calloc(SqdPos2-SqdPos1+2, sizeof(char));
 	    lseek(SqdHandle, SqdPos1, SEEK_SET);
-	    farread(SqdHandle, (byte far *)text, SqdPos2-SqdPos1-4);
+	    farread(SqdHandle, (byte far *)text, SqdPos2-SqdPos1);
 	    lseek(SqdHandle, SqdPos1, SEEK_SET);
 	    
 	    ctlbuf = formatMsg(&text, SqdPos2-SqdPos1+1);
