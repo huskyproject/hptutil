@@ -177,7 +177,7 @@ typedef struct
 int read_hdrinfo(sword handle, JAMHDRINFO *HdrInfo);
 int read_idx(sword handle, JAMIDXREC *Idx);
 int read_hdr(sword handle, JAMHDR *Hdr);
-int read_subfield(sword handle, JAMSUBFIELDptr *subfield, dword SubfieldLen);
+int read_subfield(sword handle, JAMSUBFIELDptr *subfield, dword *SubfieldLen);
 
 int write_hdrinfo(sword handle, JAMHDRINFO *HdrInfo);
 int write_idx(sword handle, JAMIDXREC *Idx);

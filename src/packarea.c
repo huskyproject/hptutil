@@ -374,7 +374,7 @@ void JamPackArea(char *areaName)
          replyinfo[HdrInfo.ActiveMsgs].ReplyNext = PackHdr.ReplyNext;
 
          Subf = (JAMSUBFIELDptr)malloc(PackHdr.SubfieldLen);
-         read_subfield(HdrHandle, &Subf, PackHdr.SubfieldLen);
+         read_subfield(HdrHandle, &Subf, &(PackHdr.SubfieldLen));
 
          text = (char*)calloc(PackHdr.TxtLen + 1, sizeof(char));
          lseek(TxtHandle, PackHdr.TxtOffset, SEEK_SET);

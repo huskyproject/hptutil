@@ -346,7 +346,7 @@ void JamLinkArea(char *areaName)
          } /* endif */
 
          Subf = (JAMSUBFIELDptr)malloc(LinkHdr.SubfieldLen);
-         read_subfield(HdrHandle, &Subf, LinkHdr.SubfieldLen);
+         read_subfield(HdrHandle, &Subf, &(LinkHdr.SubfieldLen));
          MsgIdSub = GetSubField(Subf, JAMSFLD_MSGID, LinkHdr.SubfieldLen);
          ReplySub = GetSubField(Subf, JAMSFLD_REPLYID, LinkHdr.SubfieldLen);
 
