@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  *      hptUtil - purge, pack, link and sort utility for HPT
  *      by Fedor Lizunkov 2:5020/960@Fidonet
@@ -32,9 +33,6 @@
 #include <fidoconf/xstr.h>
 
 #include <hptutil.h>
-#include <linkarea.h>
-#include <packarea.h>
-#include <purgearea.h>
 #include <sortarea.h>
 #include <fixarea.h>
 #include <undelete.h>
