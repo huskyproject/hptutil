@@ -20,7 +20,7 @@ all: $(OBJS) hptutil$(EXE)
 	$(CC) $(CFLAGS) $(SRC_DIR)$*.c
 
 hptutil$(EXE): $(OBJS)
-	$(CC) $(LFLAGS) -o hptutil$(EXE) $(OBJS) -lsmapi -lfidoconfig
+	$(CC) $(LFLAGS) -o hptutil$(EXE) $(OBJS) -lfidoconf -lsmapi -lhusky
 
 clean:
 	-$(RM) $(RMOPT) *$(OBJ)

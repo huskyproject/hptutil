@@ -27,20 +27,25 @@
 #include <stdarg.h>
 
 #include <smapi/msgapi.h>
-#include <smapi/prog.h>
 #include <fidoconf/fidoconf.h>
 #include <fidoconf/common.h>
-#include <fidoconf/xstr.h>
+#include <huskylib/xstr.h>
 
 #include <hptutil.h>
+#include <linkarea.h>
 #include <sortarea.h>
+#include <purgearea.h>
+#include <packarea.h>
 #include <fixarea.h>
 #include <undelete.h>
 
 FILE *filesout;
 FILE *fileserr;
+#define LogFileName "hptutil.log"
+FILE *hptutil_log = NULL;
 
 char quiet = 0;
+char jam_by_crc = 0;
 char keepImportLog = 0;
 char typebase;
 char *basefilename;
@@ -49,13 +54,49 @@ unsigned int debugLevel = 0;
 
 void OutScreen(char *str, ...)
 {
+   char buf[256], dt[20];
+   char *pos;
+   short cnt, cnt2;
+   static char cont = 0;
+   va_list par;
+
+   va_start (par, str);
+   if (hptutil_log != NULL) {
+      time_t t = time(NULL);
+      struct tm *tm = localtime(&t);
+      cnt = vsprintf(buf, str, par);
+      cnt2 = sprintf(dt, "%2d.%02d.%02d %02d:%02d:%02d ", 
+                         tm->tm_mday, tm->tm_mon+1, tm->tm_year%100,
+                         tm->tm_hour, tm->tm_min, tm->tm_sec);
+      buf[cnt] = dt[cnt2] = 0;
+   }
+   if (quiet == 0) vfprintf(filesout, str, par);
+   va_end (par);
+
+   if (hptutil_log != NULL) {
+     char *cur = buf;
+     do {
+       if ((pos = strchr(cur, '\n')) != NULL) *pos = 0;
+       if (!cont && *cur) fprintf(hptutil_log, "%s", dt);
+       if (pos == NULL) fprintf(hptutil_log, "%s", cur); 
+                   else fprintf(hptutil_log, "%s\n", cur);
+       cont = 0;
+       cur = (pos != NULL) ? pos + 1 : buf + cnt;
+     } while (*cur);
+     cont = (pos == NULL);
+     fflush(hptutil_log); 
+   }
+}
+/*
+void OutScreen(char *str, ...)
+{
    va_list par;
    
    va_start (par, str);
    if (quiet == 0) vfprintf(filesout, str, par);
    va_end (par);
 }
-
+*/
 void wait_d()
 {
     char form[]="-\\|/";
@@ -164,6 +205,7 @@ void processCommandLine(int argc, char *argv[], int *what)
       OutScreen("      hptutil purge - purge areas\n");
       OutScreen("      hptutil pack  - pack areas\n");
       OutScreen("      hptutil fix   - fix base (hptutil fix -? for more help)\n");
+      OutScreen("      hptutil -j    - link Jam areas by CRC (greet speed-up)\n");
       OutScreen("      hptutil -k    - keep import.log file\n");
       OutScreen("      hptutil -q    - quiet mode (no screen output)\n");
       OutScreen("      hptutil -i <filename> - alternative import.log\n\n");
@@ -180,6 +222,7 @@ void processCommandLine(int argc, char *argv[], int *what)
       else if (stricmp(argv[i], "undel") == 0) *what |= 0x20;
       else if (stricmp(argv[i], "-k") == 0) keepImportLog = 1;
       else if (stricmp(argv[i], "-q") == 0) quiet = 1;
+      else if (stricmp(argv[i], "-j") == 0) jam_by_crc = 1;
       else if (stricmp(argv[i], "-i") == 0) {
 	  if (i < argc-1) {
               i++;
@@ -217,6 +260,7 @@ int main(int argc, char *argv[])
 {
    s_fidoconfig *config;
    char *keepOrigImportLog;
+   char *buff = NULL;
    int what = 0;
    int ret = 0;
 
@@ -237,6 +281,13 @@ int main(int argc, char *argv[])
       setvar("module", "hptutil");
       config = readConfig(NULL);
       if (config) {
+         /* init log */
+         if (config->logFileDir) {
+                  xstrscat(&buff, config->logFileDir, LogFileName, NULL);
+                  hptutil_log = fopen(buff, "a");
+                  nfree(buff);
+         }
+
          if (altImportLog) {
             keepOrigImportLog = config->importlog;
 	    config->importlog = altImportLog;
@@ -264,6 +315,7 @@ int main(int argc, char *argv[])
       if (argc > 1) OutScreen("Nothing to do ...\n\n");
    } /* endif */
    
+   if (hptutil_log != NULL) fclose(hptutil_log);
    return ret;
 }
 

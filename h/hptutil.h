@@ -11,6 +11,7 @@ extern FILE *filesout;
 extern FILE *fileserr;
 
 extern char keepImportLog;
+extern char jam_by_crc;
 extern char typebase;
 extern char *basefilename;
 extern char *altImportLog;

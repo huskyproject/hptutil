@@ -40,8 +40,7 @@
 #include <unistd.h>
 #endif
 
-#include <smapi/prog.h>
-#include <smapi/compiler.h>
+#include <huskylib/compiler.h>
 #include <smapi/msgapi.h>
 #include <fidoconf/fidoconf.h>
 #include <fidoconf/common.h>
