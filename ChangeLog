@@ -2,6 +2,11 @@ hptutil 1.02
 ---------------
 
 ----- cvs ci ------
+Tue Oct  3 17:11:31 MSD 2000
+Fedor:
+* added fixing bad squish areas (jam in the future)
+
+----- cvs ci ------
 Thu Sep 28 18:40:47 MSD 2000
 Fedor:
 * adapted sort and purge for multiuser mode (jam, squish)

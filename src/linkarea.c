@@ -330,7 +330,7 @@ void JamLinkArea(char *areaName)
       msginfo = (JAMINFOpptr)calloc(msgs, sizeof(JAMINFOptr));
 
       for (i = 0; i < msgs; i++) {
-
+      
          read_idx(IdxHandle, &LinkIdx);
          if (LinkIdx.HdrOffset == 0xffffffff) {
             continue;

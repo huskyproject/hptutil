@@ -167,6 +167,7 @@ typedef struct
 
 #define fop_wpb (O_CREAT | O_TRUNC | O_RDWR | O_BINARY)
 #define fop_rpb (O_RDWR | O_BINARY)
+#define fop_rob (O_RDONLY | O_BINARY)
 
 #define get_dword(ptr)            \
    ((dword)((unsigned char)(ptr)[0]) |           \

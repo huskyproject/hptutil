@@ -2,7 +2,7 @@
 include ../huskymak.cfg
 
 OBJS    = sortarea$(OBJ) purgearea$(OBJ) packarea$(OBJ) linkarea$(OBJ) \
-          hptutil$(OBJ)
+          fixarea$(OBJ) undelete$(OBJ) hptutil$(OBJ)
 SRC_DIR = src/
 
 ifeq ($(DEBUG), 1)
