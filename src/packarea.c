@@ -619,7 +619,7 @@ void packAreas(s_fidoconfig *config)
 	 } /* endwhile */
 
          fclose(f);
-         if (stricmp(config->LinkWithImportlog, "kill")==0 && keepImportLog == 0) remove(altImportLog);
+         if ((config->LinkWithImportlog == lwiKill) && (keepImportLog == 0)) remove(altImportLog);
 	 OutScreen("Pack areas end\n");
          OutScreen("Old base size - %01lu.%lu Kb, new base size - %01lu.%lu Kb\n\n",
                     allOldSize/1000, allOldSize%1000,

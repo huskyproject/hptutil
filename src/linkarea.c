@@ -502,7 +502,7 @@ void linkAreas(s_fidoconfig *config)
    OutScreen("Link areas begin\n");
    if (config->importlog) {
 
-      if ((config->LinkWithImportlog != NULL) && (stricmp(config->LinkWithImportlog, "no")!=0)){
+      if (config->LinkWithImportlog != lwiNo) {
          f = fopen(config->importlog, "rt");
       } else {
          f = NULL;
@@ -543,7 +543,7 @@ void linkAreas(s_fidoconfig *config)
          } /* endwhile */
 
          fclose(f);
-         if (stricmp(config->LinkWithImportlog, "kill")==0 && keepImportLog == 0) remove(config->importlog);
+         if ((config->LinkWithImportlog == lwiKill) && (keepImportLog == 0)) remove(config->importlog);
          OutScreen("Link areas end\n\n");
          return;
       } /* endif */

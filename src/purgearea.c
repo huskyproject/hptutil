@@ -535,7 +535,7 @@ void purgeAreas(s_fidoconfig *config)
 	 } /* endwhile */
 
          fclose(f);
-         if (stricmp(config->LinkWithImportlog, "kill")==0 && keepImportLog == 0) remove(altImportLog);
+         if ((config->LinkWithImportlog == lwiKill) && (keepImportLog == 0)) remove(altImportLog);
 	 OutScreen("Purge areas end\n");
 	 OutScreen("Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n\n", 
               totoldmsgs, totpurged, totoldmsgs-totpurged);
