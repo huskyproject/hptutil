@@ -1,6 +1,12 @@
 hptutil 1.01
 ---------------
 
+
+----- cvs ci ------
+Mon May  1 17:06:15 NOVST 2000
+max(patch from Alex Bronin):
+* -nolink option disables reply linking for area
+
 ----- cvs ci ------
 Fri Mar 24 00:44:00 NOVT 2000
 max(patch from Alex Bronin):

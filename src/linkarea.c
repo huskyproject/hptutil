@@ -461,26 +461,30 @@ void JamLinkArea(char *areaName)
 void linkArea(s_area *area)
 {
    int make = 0;
-   if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
-      fprintf(outfile, "is JAM ... ");
-      JamLinkArea(area->fileName);
-      make = 1;
+   if (area->nolink) {
+      fprintf(outfile, "has nolink option ... ");
    } else {
-      if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
-         fprintf(outfile, "is Squish ... ");
-         SquishLinkArea(area->fileName);
+      if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
+         fprintf(outfile, "is JAM ... ");
+         JamLinkArea(area->fileName);
          make = 1;
       } else {
-         if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
-            fprintf(outfile, "is MSG ... ");
+         if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
+            fprintf(outfile, "is Squish ... ");
+            SquishLinkArea(area->fileName);
+            make = 1;
          } else {
-            if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
-               fprintf(outfile, "is PASSTHROUGH ... ");
+            if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
+               fprintf(outfile, "is MSG ... ");
             } else {
+               if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
+                  fprintf(outfile, "is PASSTHROUGH ... ");
+               } else {
+               } /* endif */
             } /* endif */
          } /* endif */
       } /* endif */
-   } /* endif */
+   }
 
    if (make) {
       fprintf(outfile, "Linked %d msgs\n", linkmsgs);
