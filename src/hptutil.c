@@ -207,7 +207,7 @@ void processCommandLine(int argc, char *argv[], int *what)
       OutScreen("      hptutil purge - purge areas\n");
       OutScreen("      hptutil pack  - pack areas\n");
       OutScreen("      hptutil fix   - fix base (hptutil fix -? for more help)\n");
-      OutScreen("      hptutil -j    - link Jam areas by CRC (greet speed-up)\n");
+      OutScreen("      hptutil -j    - link Jam areas by CRC (great speed-up)\n");
       OutScreen("      hptutil -k    - keep import.log file\n");
       OutScreen("      hptutil -q    - quiet mode (no screen output)\n");
       OutScreen("      hptutil -i <filename> - alternative import.log\n\n");
