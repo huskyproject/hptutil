@@ -1,0 +1,30 @@
+include ../huskymak.cfg
+
+CC       = gcc 
+
+OBJS    = sortarea.o purgearea.o packarea.o linkarea.o hptutil.o
+SRC_DIR = ./src/
+
+ifeq ($(DEBUG), 1)
+  CFLAGS  = -c -I./h -I../smapi -I../fidoconfig -Wall -ggdb -O3 -DUNIX
+  LFLAGS  = -L$(LIBDIR)
+else
+  CFLAGS  = -c -I./h -I../smapi -I../fidoconfig -Wall -O3 -s -DUNIX
+  LFLAGS  = -L$(LIBDIR)
+endif
+
+
+all: $(OBJS) \
+    hptutil
+
+%.o: $(SRC_DIR)%.c
+	$(CC) $(CFLAGS) $(SRC_DIR)$*.c
+
+hptutil: $(OBJS)
+	$(CC) $(LFLAGS) -o hptutil $(OBJS) -lsmapilnx -lfidoconfig 
+
+clean:
+	-rm -f *.o
+	-rm -f *~
+	-rm -f hptutil
+	-rm -f core

@@ -1,0 +1,31 @@
+DEBUG   = 0
+CC      = wcc386
+LINK    = WLINK
+SRC     = src
+
+!IF $(DEBUG) == 1
+CFLAGS  = -d2 -hw -i=h;..\smapi;..\fidoconfig -ot -zq
+LFLAGS  = DEBUG All
+!ELSE
+CFLAGS  = -ih;..\smapi;..\fidoconfig -oneatx -zq
+LFLAGS  =
+!ENDIF
+
+OBJS = sortarea.obj, purgearea.obj, packarea.obj, linkarea.obj, hptutil.obj
+
+all: $(OBJS) \
+     hptUtil.exe
+
+$(OBJS): $(SRC)\$*.c
+  @echo compiling $*.c
+  $(CC) $(CFLAGS) $(SRC)\$*.c
+
+hptUtil.exe: $(OBJS)
+  @echo linking hptUtil
+  $(LINK) $(LFLAGS) FILE $(OBJS) Library ..\smapi\smapiwco, ..\fidoconfig\fidoconfig.lib NAME hptUtil.exe
+
+clean:
+	-DEL *.OBJ
+	-DEL *.err
+	-DEL hptUtil.exe
+
