@@ -1,0 +1,29 @@
+CC       = gcc
+DEBUG    = 0
+
+OBJS    = sortarea.obj purgearea.obj packarea.obj linkarea.obj hptutil.obj
+SRC_DIR = ./src/
+
+ifeq ($(DEBUG), 1)
+  CFLAGS  = -c -Zomf -I./h -I.. -Wall -g -O3 -DOS2
+  LFLAGS  = -Zomf -Zsys -L../smapi -L../fidoconf -g -Zlinker /PM:VIO
+else
+  CFLAGS  = -c -Zomf -I./h -I.. -Wall -O3 -s -DOS2
+  LFLAGS  = -Zomf -Zsys -L../smapi -L../fidoconf -s -Zlinker /PM:VIO
+endif
+
+
+all: $(OBJS) \
+    hptUtil.exe
+
+%.obj: $(SRC_DIR)%.c
+	$(CC) $(CFLAGS) $(SRC_DIR)$*.c
+
+hptUtil.exe: $(OBJS)
+	$(CC) $(LFLAGS) -o hptUtil.exe $(OBJS) -lfconfemo -lsmapiemo
+
+clean:
+	-rm -f *.obj
+	-rm -f *~
+	-rm -f hptutil.exe
+	-rm -f core
