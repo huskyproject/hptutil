@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
    processCommandLine(argc, argv, &what);
 
    if (what) {
-      config = readConfig();
+      config = readConfig(NULL);
       if (config) {
          if (what & 1) purgeAreas(config);
          if (what & 2) packAreas(config);
