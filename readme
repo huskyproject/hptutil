@@ -1,3 +1,10 @@
+
+for people who doesn't know russian language.
+i hope they learn it and will read the "War and Peace" in original. :)
+
+Max Levenkov, sackett@mail.ru
+
+==============================================================================
 I have tested working under linux, not working... compiling. Package contains
 two files - for Watcom OS/2 and Linux. Who needed another makefiles - make it
 by himself. There was no msgbase crashing, etc. under Watcom (OS/2).
