@@ -23,16 +23,16 @@ hptutil$(EXE): $(OBJS)
 	$(CC) $(LFLAGS) -o hptutil$(EXE) $(OBJS) -lsmapi -lfidoconfig
 
 clean:
-	-$(RM) *$(OBJ)
-	-$(RM) *~
-	-$(RM) core
+	-$(RM) $(RMOPT) *$(OBJ)
+	-$(RM) $(RMOPT) *~
+	-$(RM) $(RMOPT) core
 
 distclean: clean
-	-$(RM) hptutil$(EXE)
+	-$(RM) $(RMOPT) hptutil$(EXE)
 
 install: hptutil$(EXE)
 	$(INSTALL) $(IBOPT) hptutil$(EXE) $(BINDIR)
 
 uninstall:
-	-$(RM) $(BINDIR)$(DIRSEP)hptutil$(EXE)
+	-$(RM) $(RMOPT) $(BINDIR)$(DIRSEP)hptutil$(EXE)
 
