@@ -9,7 +9,7 @@ TLIB=   lib -nologo
 FCONFL=	..\fidoconf\fconfmvc.lib
 SMAPIL=	..\smapi\smapimvc.lib
 
-OBJS    = sortarea.obj purgearea.obj packarea.obj linkarea.obj
+OBJS    = sortarea.obj purgearea.obj packarea.obj linkarea.obj fixarea.obj undelete.obj
 
 {src}.c.obj:
 	$(CC) $(CFLAGS) $(CDEFS) $(COPT) -c $<
