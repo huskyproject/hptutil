@@ -1,24 +1,34 @@
-CC      = wcc386
-LINK    = WLINK
-SRC     = src
+# $Id$
+# Makefile for Watcom C (Win32)
+#
+# Predefines: __WATCOMC__, __NT__
 
-CFLAGS  = -zq -wx -bt=nt -ih;.. -oneatx -5
-LFLAGS  =
+LIBS    = ..\smapi\smapiwcw.lib ..\fidoconf\fconfwcw.lib
+TARGET  = hptutil.exe
 
-OBJS = sortarea.obj purgearea.obj packarea.obj linkarea.obj fixarea.obj undelete.obj hptutil.obj
+CC      = wcl386
+LINK    = wlink
+RM      = del
+RMOPT   =
+SRC     = src\
+OBJ     = .obj
+EXE     = .exe
 
-all: $(OBJS) hptutil.exe
+COPTS   = -zq -wx -bt=nt -ih;.. -oneatx -5 -fpi87 -c
+CDEFS   =
+LOPTS   = -bt=nt -l=nt
+TARGETFLAG = -fe=
 
-$(OBJS): $(SRC)\*.c
-  @echo compiling $*.c
-  $(CC) $(CFLAGS) $(SRC)\$*.c
+SYMBOLIC= .SYMBOLIC
 
-hptutil.exe: $(OBJS)
-  @echo linking hptutil
-  $(LINK) $(LFLAGS) FILE sortarea.obj, purgearea.obj, packarea.obj, linkarea.obj, fixarea.obj, undelete.obj, hptutil.obj Library ..\smapi\smapiwcw, ..\fidoconf\fconfwcw.lib NAME hptutil.exe
+.DEFAULT
+	@%null
 
-clean:
-	-DEL *.OBJ
-	-DEL *.err
-	-DEL hptutil.exe
+!include makefile.inc
 
+
+.c :       $(SRC)
+.c$(OBJ) :
+	$(CC) $(COPTS) $(CDEFS) $<
+
+clean : commonclean  $(SYMBOLIC)
