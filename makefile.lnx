@@ -1,6 +1,6 @@
-include ../huskymak.cfg
-
-CC       = gcc 
+CC       = gcc
+DEBUG    = 1
+LIBDIR   = /usr/local/lib
 
 OBJS    = sortarea.o purgearea.o packarea.o linkarea.o hptutil.o
 SRC_DIR = ./src/
