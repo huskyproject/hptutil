@@ -1,8 +1,9 @@
+# include Husky-Makefile-Config
 include ../huskymak.cfg
 
-OBJS    = sortarea$(OBJ) purgearea$(OBJ) packarea$(OBJ) linkarea$(OBJ)
+OBJS    = sortarea$(OBJ) purgearea$(OBJ) packarea$(OBJ) linkarea$(OBJ) \
           hptutil$(OBJ)
-SRC_DIR = ./src/
+SRC_DIR = src/
 
 ifeq ($(DEBUG), 1)
   CFLAGS  = -c -I./h -I../smapi -I$(INCDIR) -Wall -ggdb -O3 -D$(OSTYPE)
