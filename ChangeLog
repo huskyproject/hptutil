@@ -1,0 +1,8 @@
+hptutil 1.01
+---------------
+
+----- cvs ci ------
+Sat Jan 29 00:32:51 NOVT 2000
+max:
+* started ChangeLog
+* added makefile.wcw
