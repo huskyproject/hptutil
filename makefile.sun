@@ -2,7 +2,7 @@ CC       = gcc
 CFLAGS   = -c -g -O2 -DUNIX -I./h -I..
 LFLAGS   = -s -L../fidoconf -L../smapi
 
-OBJS    = sortarea.o purgearea.o packarea.o linkarea.o hptutil.o
+OBJS    = sortarea.o purgearea.o packarea.o linkarea.o fixarea.o undelete.o hptutil.o
 SRC_DIR = src/
 
 all: $(OBJS) \

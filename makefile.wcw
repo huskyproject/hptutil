@@ -5,7 +5,7 @@ SRC     = src
 CFLAGS  = -zq -wx -bt=nt -ih;.. -oneatx -5
 LFLAGS  =
 
-OBJS = sortarea.obj purgearea.obj packarea.obj linkarea.obj hptutil.obj
+OBJS = sortarea.obj purgearea.obj packarea.obj linkarea.obj fixarea.obj undelete.obj hptutil.obj
 
 all: $(OBJS) hptutil.exe
 
@@ -15,7 +15,7 @@ $(OBJS): $(SRC)\*.c
 
 hptutil.exe: $(OBJS)
   @echo linking hptutil
-  $(LINK) $(LFLAGS) FILE sortarea.obj, purgearea.obj, packarea.obj, linkarea.obj, hptutil.obj Library ..\smapi\smapiwcw, ..\fidoconf\fconfwcw.lib NAME hptutil.exe
+  $(LINK) $(LFLAGS) FILE sortarea.obj, purgearea.obj, packarea.obj, linkarea.obj, fixarea.obj, undelete.obj, hptutil.obj Library ..\smapi\smapiwcw, ..\fidoconf\fconfwcw.lib NAME hptutil.exe
 
 clean:
 	-DEL *.OBJ
