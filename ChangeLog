@@ -1,6 +1,10 @@
 hptutil 1.01
 ---------------
 
+----- cvs ci ------
+Mon May  8 17:40:14 NOVST 2000
+max (patch from Alex Bronin):
+* MS Visual C porting
 
 ----- cvs ci ------
 Mon May  1 17:06:15 NOVST 2000

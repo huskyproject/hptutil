@@ -36,7 +36,9 @@
 #if !defined(UNIX) && !defined(SASC)
 #include <share.h>
 #endif
+#if !(defined(_MSC_VER) && (_MSC_VER >= 1200))
 #include <unistd.h>
+#endif
 
 #include <smapi/compiler.h>
 #include <smapi/msgapi.h>

@@ -1,0 +1,26 @@
+# Microsoft Visual C++ Makefile
+
+CC=     cl
+CFLAGS= -nologo -Zp1 -I.. -Ih
+CDEFS=  -D__NT__ -DNT -DWINNT -D_CONSOLE
+COPT=   -O2
+TLIB=   lib -nologo
+
+FCONFL=	..\fidoconf\fconfmvc.lib
+SMAPIL=	..\smapi\smapimvc.lib
+
+OBJS    = sortarea.obj purgearea.obj packarea.obj linkarea.obj
+
+{src}.c.obj:
+	$(CC) $(CFLAGS) $(CDEFS) $(COPT) -c $<
+
+all: hptutil.exe
+
+hptutil.exe: $(OBJS) hptutil.obj
+        $(CC) $(CFLAGS) $(COPT) $(CDEFS) -Fe$@ src\hptutil.c $(OBJS) $(FCONFL) $(SMAPIL)
+
+clean:
+	-del *.obj
+
+distclean: clean
+	-del *.exe
