@@ -33,3 +33,6 @@ distclean: clean
 install: hptutil$(EXE)
 	$(INSTALL) $(IBOPT) hptutil$(EXE) $(BINDIR)
 
+uninstall:
+	-$(RM) $(BINDIR)$(DIRSEP)hptutil$(EXE)
+
