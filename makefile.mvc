@@ -6,7 +6,7 @@ CDEFS=  -D__NT__ -DNT -DWINNT -D_CONSOLE
 COPT=   -O2
 TLIB=   lib -nologo
 
-LIBS = ..\fidoconf\fconfmvc.lib ..\smapi\make\smapimvc.lib ..\huskylib\make\huskymvc.lib
+LIBS = ..\fidoconf\make\fconfmvc.lib ..\smapi\make\smapimvc.lib ..\huskylib\make\huskymvc.lib
 
 OBJS    = sortarea.obj purgearea.obj packarea.obj linkarea.obj fixarea.obj undelete.obj
 
