@@ -1,8 +1,6 @@
 /* $Id$
  *
- *      hptkill - areas killer for high Portable Tosser (hpt)
- *      by Serguei Revtov 2:5021/11.10 || 2:5021/19.1
- *      Some code was taken from hpt/src/areafix.c
+ *      hptutil - areas utility for high Portable Tosser (hpt)
  *
  * This file is part of HPT.
  *
