@@ -110,17 +110,19 @@ void wait_d()
 void printVer()
 {
 #if defined(__linux__)
-   OutScreen("\nhptutil v%u.%02u/lnx\n\n", VER_MAJOR, VER_MINOR);
+   OutScreen("\nhptutil v%u.%u/lnx\n\n", VER_MAJOR, VER_MINOR);
 #elif defined(__freebsd__)
-   OutScreen("\nhptutil v%u.%02u/bsd\n\n", VER_MAJOR, VER_MINOR);
+   OutScreen("\nhptutil v%u.%u/bsd\n\n", VER_MAJOR, VER_MINOR);
 #elif defined(__OS2__)
-   OutScreen("\nhptutil v%u.%02u/os2\n\n", VER_MAJOR, VER_MINOR);
+   OutScreen("\nhptutil v%u.%u/os2\n\n", VER_MAJOR, VER_MINOR);
 #elif defined(__NT__)
-   OutScreen("\nhptutil v%u.%02u/w32\n\n", VER_MAJOR, VER_MINOR);
+   OutScreen("\nhptutil v%u.%u/w32\n\n", VER_MAJOR, VER_MINOR);
 #elif defined(__sun__)
-   OutScreen("\nhptutil v%u.%02u/sun\n\n", VER_MAJOR, VER_MINOR);
+   OutScreen("\nhptutil v%u.%u/sun\n\n", VER_MAJOR, VER_MINOR);
+#elif defined(__DJGPP__)
+   OutScreen("\nhptutil v%u.%u/dpmi\n\n", VER_MAJOR, VER_MINOR);
 #else
-   OutScreen("\nhptutil v%u.%02u\n\n", VER_MAJOR, VER_MINOR);
+   OutScreen("\nhptutil v%u.%u\n\n", VER_MAJOR, VER_MINOR);
 #endif
 
 }
