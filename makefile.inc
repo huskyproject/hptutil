@@ -3,7 +3,8 @@
 # (Include file for other makefiles)
 # Written by Stas Degteff 2:5080/102; g@grumbler.org
 
-OBJS    = fixarea$(_OBJ) sortarea$(_OBJ) undelete$(_OBJ) hptutil$(_OBJ)
+OBJS    = sortarea$(_OBJ) purgearea$(_OBJ) packarea$(_OBJ) linkarea$(_OBJ) \
+          fixarea$(_OBJ) undelete$(_OBJ) hptutil$(_OBJ)
 
 default: all
 
