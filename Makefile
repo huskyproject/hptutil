@@ -1,38 +1,44 @@
 # include Husky-Makefile-Config
 include ../huskymak.cfg
 
-OBJS    = sortarea$(OBJ) purgearea$(OBJ) packarea$(OBJ) linkarea$(OBJ) \
-          fixarea$(OBJ) undelete$(OBJ) hptutil$(OBJ)
+OBJS    = sortarea$(_OBJ) purgearea$(_OBJ) packarea$(_OBJ) linkarea$(_OBJ) \
+          fixarea$(_OBJ) undelete$(_OBJ) hptutil$(_OBJ)
 SRC_DIR = src/
 
 ifeq ($(DEBUG), 1)
   CFLAGS  = $(DEBCFLAGS) $(WARNFLAGS) $(ADDCDEFS) -Ih -I$(INCDIR) -D$(OSTYPE)
-  LFLAGS  = -L$(LIBDIR) $(DEBLFLAGS) $(ADDLDEFS)
+  LFLAGS  = $(DEBLFLAGS) $(ADDLDEFS)
 else
   CFLAGS  = $(OPTCFLAGS) $(WARNFLAGS) $(ADDCDEFS) -Ih -I$(INCDIR) -D$(OSTYPE)
-  LFLAGS  = -L$(LIBDIR) $(OPTLFLAGS) $(ADDLDEFS)
+  LFLAGS  = $(OPTLFLAGS) $(ADDLDEFS)
+endif
+
+ifeq ($(SHORTNAME), 1)
+  LIBS=-L$(LIBDIR) -lhusky -lfidoconf -lsmapi
+else
+  LIBS=-L$(LIBDIR) -lhusky -lfidoconfig -lsmapi
 endif
 
 
-all: $(OBJS) hptutil$(EXE)
+all: $(OBJS) hptutil$(_EXE)
 
-%$(OBJ): $(SRC_DIR)%.c
+%$(_OBJ): $(SRC_DIR)%.c
 	$(CC) $(CFLAGS) $(SRC_DIR)$*.c
 
-hptutil$(EXE): $(OBJS)
-	$(CC) $(LFLAGS) -o hptutil$(EXE) $(OBJS) -lfidoconf -lsmapi -lhusky
+hptutil$(_EXE): $(OBJS)
+	$(CC) $(LFLAGS) -o hptutil$(_EXE) $(OBJS) $(LIBS)
 
 clean:
-	-$(RM) $(RMOPT) *$(OBJ)
+	-$(RM) $(RMOPT) *$(_OBJ)
 	-$(RM) $(RMOPT) *~
 	-$(RM) $(RMOPT) core
 
 distclean: clean
-	-$(RM) $(RMOPT) hptutil$(EXE)
+	-$(RM) $(RMOPT) hptutil$(_EXE)
 
-install: hptutil$(EXE)
-	$(INSTALL) $(IBOPT) hptutil$(EXE) $(BINDIR)
+install: hptutil$(_EXE)
+	$(INSTALL) $(IBOPT) hptutil$(_EXE) $(BINDIR)
 
 uninstall:
-	-$(RM) $(RMOPT) $(BINDIR)$(DIRSEP)hptutil$(EXE)
+	-$(RM) $(RMOPT) $(BINDIR)$(DIRSEP)hptutil$(_EXE)
 
