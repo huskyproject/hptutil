@@ -24,9 +24,9 @@
 //#include <stdlib.h>
 #include <string.h>
 
-#include <msgapi.h>
-#include <fidoconfig.h>
-#include <common.h>
+#include <smapi/msgapi.h>
+#include <fidoconfig/fidoconfig.h>
+#include <fidoconfig/common.h>
 
 #include <linkarea.h>
 #include <packarea.h>

@@ -6,10 +6,10 @@ OBJS    = sortarea$(OBJ) purgearea$(OBJ) packarea$(OBJ) linkarea$(OBJ) \
 SRC_DIR = src/
 
 ifeq ($(DEBUG), 1)
-  CFLAGS  = $(DEBCFLAGS) $(WARNFLAGS) -I./h -I../smapi -I$(INCDIR) -D$(OSTYPE)
+  CFLAGS  = $(DEBCFLAGS) $(WARNFLAGS) -Ih -I$(INCDIR) -D$(OSTYPE)
   LFLAGS  = -L$(LIBDIR) $(DEBLFLAGS)
 else
-  CFLAGS  = $(OPTCFLAGS) $(WARNFLAGS) -I./h -I../smapi -I$(INCDIR) -D$(OSTYPE)
+  CFLAGS  = $(OPTCFLAGS) $(WARNFLAGS) -Ih -I$(INCDIR) -D$(OSTYPE)
   LFLAGS  = -L$(LIBDIR) $(OPTLFLAGS)
 endif
 

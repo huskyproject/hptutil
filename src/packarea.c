@@ -38,10 +38,10 @@
 #endif
 #include <unistd.h>
 
-#include <compiler.h>
-#include <msgapi.h>
-#include <fidoconfig.h>
-#include <common.h>
+#include <smapi/compiler.h>
+#include <smapi/msgapi.h>
+#include <fidoconfig/fidoconfig.h>
+#include <fidoconfig/common.h>
 
 #include <jam.h>
 #include <squish.h>
