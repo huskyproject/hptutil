@@ -49,7 +49,7 @@
 #include <linkarea.h>
 
 extern FILE *outfile;
-extern int OpenFile(char *name, word mode);
+extern int Open_File(char *name, word mode);
 extern int CheckMsg(JAMHDRptr Hdr);
 
 /* --------------------------SQUISH sector ON------------------------------- */
@@ -139,7 +139,7 @@ void SquishPurgeArea(s_area *area)
    sprintf(sqi, "%s%s", area->fileName, EXT_SQIFILE);
    sprintf(sql, "%s%s", area->fileName, EXT_SQLFILE);
 
-   SqdHandle = OpenFile(sqd, fop_rpb);
+   SqdHandle = Open_File(sqd, fop_rpb);
    free(sqd);
 
    if (SqdHandle == -1) {
@@ -147,7 +147,7 @@ void SquishPurgeArea(s_area *area)
       return;
    } /* endif */
       
-   SqiHandle = OpenFile(sqi, fop_rpb);
+   SqiHandle = Open_File(sqi, fop_rpb);
    free(sqi);
 
    if (SqiHandle == -1) {
@@ -155,7 +155,7 @@ void SquishPurgeArea(s_area *area)
       return;
    } /* endif */
 
-   SqlHandle = OpenFile(sql, fop_rpb);
+   SqlHandle = Open_File(sql, fop_rpb);
    free(sql);
 
    if (SqlHandle == -1) {
@@ -318,7 +318,7 @@ void JamPurgeArea(s_area *area)
 
 //   oldmsgs = newmsgs = 0;
 
-   IdxHandle = OpenFile(idx, fop_rpb);
+   IdxHandle = Open_File(idx, fop_rpb);
 
    free(idx);
 
@@ -327,7 +327,7 @@ void JamPurgeArea(s_area *area)
       return;
    } /* endif */
 
-   HdrHandle = OpenFile(hdr, fop_rpb);
+   HdrHandle = Open_File(hdr, fop_rpb);
 
    free(hdr);
 
@@ -336,7 +336,7 @@ void JamPurgeArea(s_area *area)
       return;
    } /* endif */
 
-   LrdHandle = OpenFile(lrd, fop_rpb);
+   LrdHandle = Open_File(lrd, fop_rpb);
 
    if (LrdHandle == -1) {
       lastread = 0;

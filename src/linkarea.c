@@ -53,7 +53,7 @@ FILE *outfile;
 int  linkmsgs;
 extern char keepImportLog;
 
-int OpenFile(char *name, word mode)
+int Open_File(char *name, word mode)
 {
    int handle;
 
@@ -116,7 +116,7 @@ void SquishLinkArea(char *areaName)
    sprintf(sqd, "%s%s", areaName, EXT_SQDFILE);
    sprintf(sqi, "%s%s", areaName, EXT_SQIFILE);
 
-   SqdHandle = OpenFile(sqd, fop_rpb);
+   SqdHandle = Open_File(sqd, fop_rpb);
    free(sqd);
 
    if (SqdHandle == -1) {
@@ -124,7 +124,7 @@ void SquishLinkArea(char *areaName)
       return;
    } /* endif */
       
-   SqiHandle = OpenFile(sqi, fop_rpb);
+   SqiHandle = Open_File(sqi, fop_rpb);
    free(sqi);
 
    if (SqiHandle == -1) {
@@ -303,7 +303,7 @@ void JamLinkArea(char *areaName)
    sprintf(hdr, "%s%s", areaName, EXT_HDRFILE);
    sprintf(idx, "%s%s", areaName, EXT_IDXFILE);
 
-   IdxHandle = OpenFile(idx, fop_rpb);
+   IdxHandle = Open_File(idx, fop_rpb);
    free(idx);
 
    if (IdxHandle == -1) {
@@ -311,7 +311,7 @@ void JamLinkArea(char *areaName)
       return;
    } /* endif */
 
-   HdrHandle = OpenFile(hdr, fop_rpb);
+   HdrHandle = Open_File(hdr, fop_rpb);
    free(hdr);
 
    if (HdrHandle == -1) {

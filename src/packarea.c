@@ -48,7 +48,7 @@
 #include <packarea.h>
 
 extern FILE *outfile;
-extern int OpenFile(char *name, word mode);
+extern int Open_File(char *name, word mode);
 extern int CheckMsg(JAMHDRptr Hdr);
 
 long oldmsgs;
@@ -82,14 +82,14 @@ void SquishPackArea(char *areaName)
 
    oldmsgs = 0;
 
-   NewSqdHandle = OpenFile(newsqd, fop_wpb);
+   NewSqdHandle = Open_File(newsqd, fop_wpb);
    if (NewSqdHandle == -1) {
       free(sqd);
       free(sqi);
       free(newsqd);
       free(newsqi);
    } /* endif */
-   NewSqiHandle = OpenFile(newsqi, fop_wpb);
+   NewSqiHandle = Open_File(newsqi, fop_wpb);
    if (NewSqiHandle == -1) {
       free(sqd);
       free(sqi);
@@ -98,7 +98,7 @@ void SquishPackArea(char *areaName)
       close(NewSqdHandle);
    } /* endif */
 
-   SqdHandle = OpenFile(sqd, fop_rpb);
+   SqdHandle = Open_File(sqd, fop_rpb);
    if (SqdHandle == -1) {
       free(sqd);
       free(sqi);
@@ -107,7 +107,7 @@ void SquishPackArea(char *areaName)
       close(NewSqdHandle);
       close(NewSqiHandle);
    } /* endif */
-   SqiHandle = OpenFile(sqi, fop_rpb);
+   SqiHandle = Open_File(sqi, fop_rpb);
    if (SqiHandle == -1) {
       free(sqd);
       free(sqi);
@@ -252,7 +252,7 @@ void JamPackArea(char *areaName)
 
    oldmsgs = 0;
 
-   NewHdrHandle = OpenFile(newhdr, fop_wpb);
+   NewHdrHandle = Open_File(newhdr, fop_wpb);
    if (NewHdrHandle == -1) {
       free(hdr);
       free(idx);
@@ -262,7 +262,7 @@ void JamPackArea(char *areaName)
       free(newtxt);
       return;
    } /* endif */
-   NewIdxHandle = OpenFile(newidx, fop_wpb);
+   NewIdxHandle = Open_File(newidx, fop_wpb);
    if (NewIdxHandle == -1) {
       free(hdr);
       free(idx);
@@ -273,7 +273,7 @@ void JamPackArea(char *areaName)
       close(NewHdrHandle);
       return;
    } /* endif */
-   NewTxtHandle = OpenFile(newtxt, fop_wpb);
+   NewTxtHandle = Open_File(newtxt, fop_wpb);
    if (NewTxtHandle == -1) {
       free(hdr);
       free(idx);
@@ -286,7 +286,7 @@ void JamPackArea(char *areaName)
       return;
    } /* endif */
 
-   HdrHandle = OpenFile(hdr, fop_rpb);
+   HdrHandle = Open_File(hdr, fop_rpb);
    if (NewHdrHandle == -1) {
       free(hdr);
       free(idx);
@@ -299,7 +299,7 @@ void JamPackArea(char *areaName)
       close(NewTxtHandle);
       return;
    } /* endif */
-   IdxHandle = OpenFile(idx, fop_rpb);
+   IdxHandle = Open_File(idx, fop_rpb);
    if (NewIdxHandle == -1) {
       free(hdr);
       free(idx);
@@ -313,7 +313,7 @@ void JamPackArea(char *areaName)
       close(HdrHandle);
       return;
    } /* endif */
-   TxtHandle = OpenFile(txt, fop_rpb);
+   TxtHandle = Open_File(txt, fop_rpb);
    if (NewTxtHandle == -1) {
       free(hdr);
       free(idx);
