@@ -90,6 +90,7 @@ void SquishPackArea(char *areaName)
       free(sqi);
       free(newsqd);
       free(newsqi);
+      return;
    } /* endif */
    NewSqiHandle = Open_File(newsqi, fop_wpb);
    if (NewSqiHandle == -1) {
