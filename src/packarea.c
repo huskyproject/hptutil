@@ -145,7 +145,6 @@ void SquishPackArea(char *areaName)
 
          read_sqhdr(SqdHandle, &sqhdr);
          if ((sqhdr.frame_type & FRAME_free) == FRAME_free) {
-            lseek(SqdHandle, sqhdr.frame_length, SEEK_CUR);
             continue;
          } else {
          } /* endif */

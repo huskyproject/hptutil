@@ -2,6 +2,11 @@ hptutil 1.01
 ---------------
 
 ----- cvs ci ------
+Tue Aug 23 22:59:03 NOVST 2000
+max:
+* return back from yesterday patch
+
+----- cvs ci ------
 Tue Aug 22 22:50:31 NOVST 2000
 max (patch from Serguei Revtov):
 * pack fixing (headers reads correctly)
