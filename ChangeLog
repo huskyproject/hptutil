@@ -2,6 +2,11 @@ hptutil 1.01
 ---------------
 
 ----- cvs ci ------
+Tue Aug 22 22:50:31 NOVST 2000
+max (patch from Serguei Revtov):
+* pack fixing (headers reads correctly)
+
+----- cvs ci ------
 Tue Jul 25 22:09:07 NOVST 2000
 max (patch from Pavel Gulchouk):
 * module=hptutil
