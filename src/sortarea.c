@@ -6,7 +6,7 @@
  *
  * HPT is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2, or (at your option) any
+ * free Software Foundation; either version 2, or (at your option) any
  * later version.
  *
  * HPT is distributed in the hope that it will be useful, but
@@ -15,7 +15,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with HPT; see the file COPYING.  If not, write to the Free
+ * along with HPT; see the file COPYING.  If not, write to the free
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
 */
@@ -105,9 +105,9 @@ void freesqsort(SQSORTptr sqsort)
 
    while (sqsort->next) {
       sqsort = sqsort->next;
-      free(sqsort->prev);
+      nfree(sqsort->prev);
    } /* endwhile */
-   free(sqsort);
+   nfree(sqsort);
 }
 
 unsigned int SortSquishArea(SQSORTptr sqsort, int SqdHandle, int SqiHandle, SQBASEptr sqbase, long idxPos, UMSGID umsgid)
@@ -164,25 +164,25 @@ unsigned int SquishSortArea(s_area *area)
    sprintf(sql, "%s%s", area->fileName, EXT_SQLFILE);
 
    SqdHandle = Open_File(sqd, fop_rpb);
-   free(sqd);
+   nfree(sqd);
 
    if (SqdHandle == -1) {
-      free(sqi);
-      free(sql);
+      nfree(sqi);
+      nfree(sql);
       return 0;
    } /* endif */
       
    SqiHandle = Open_File(sqi, fop_rpb);
-   free(sqi);
+   nfree(sqi);
 
    if (SqiHandle == -1) {
-      free(sql);
+      nfree(sql);
       close(SqdHandle);
       return 0;
    } /* endif */
 
    SqlHandle = Open_File(sql, fop_rpb);
-   free(sql);
+   nfree(sql);
 
    umsgid = 0;
    if (SqlHandle != -1) {
@@ -193,7 +193,7 @@ unsigned int SquishSortArea(s_area *area)
             sql = (char*)calloc(sizeof(dword), sizeof(char));
             farread(SqlHandle, sql, sizeof(dword));
             umsgidTMP = get_dword(sql);
-            free(sql);
+            nfree(sql);
 	    if (umsgid < umsgidTMP) umsgid = umsgidTMP;
 	 }
       }
@@ -301,9 +301,9 @@ void freejamsort(JAMSORTptr jamsort)
 
    while (jamsort->next) {
       jamsort = jamsort->next;
-      free(jamsort->prev);
+      nfree(jamsort->prev);
    } /* endwhile */
-   free(jamsort);
+   nfree(jamsort);
 }
 
 unsigned int SortJamArea(JAMSORTptr jamsort, int IdxHandle, int HdrHandle, long idxPos, long firstnum)
@@ -353,26 +353,25 @@ unsigned int JamSortArea(s_area *area)
    sprintf(lrd, "%s%s", area->fileName, EXT_LRDFILE);
 
    IdxHandle = Open_File(idx, fop_rpb);
-
-   free(idx);
+   nfree(idx);
 
    if (IdxHandle == -1) {
-      free(hdr);
+      nfree(hdr);
+      nfree(lrd);
       return 0;
    } /* endif */
 
    HdrHandle = Open_File(hdr, fop_rpb);
-
-   free(hdr);
+   nfree(hdr);
 
    if (HdrHandle == -1) {
       close(IdxHandle);
+      nfree(lrd);
       return 0;
    } /* endif */
 
    LrdHandle = Open_File(lrd, fop_rpb);
-   
-   free(lrd);
+   nfree(lrd);
 
    lastread = 0;
    if (LrdHandle != -1) {
@@ -383,7 +382,7 @@ unsigned int JamSortArea(s_area *area)
             lrd = (char*)calloc(sizeof(JAMLREAD), sizeof(char));
             farread(LrdHandle, lrd, sizeof(JAMLREAD));
             lstrdTMP = get_dword(lrd+8);
-            free(lrd);
+            nfree(lrd);
 	    if (lastread < lstrdTMP) lastread = lstrdTMP;
 	 }
       }
@@ -530,7 +529,7 @@ void sortAreas(s_fidoconfig *config)
                } /* endif */
             } /* endfor */
 
-            free(areaname);
+            nfree(areaname);
 
          } /* endwhile */
 

@@ -6,7 +6,7 @@
  *
  * HPT is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2, or (at your option) any
+ * free Software Foundation; either version 2, or (at your option) any
  * later version.
  *
  * HPT is distributed in the hope that it will be useful, but
@@ -15,7 +15,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with HPT; see the file COPYING.  If not, write to the Free
+ * along with HPT; see the file COPYING.  If not, write to the free
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
 */
@@ -199,7 +199,7 @@ void processCommandLine(int argc, char *argv[], int *what)
               i++;
 	      xstrcat(&tmp, argv[i]);
 	      debugLevel = (unsigned int)(atoi(tmp));
-	      free(tmp);
+	      nfree(tmp);
           } else {
 	      fprintf(fileserr, "Not found option for \'-d\' key!\n\n");
 	      exit (5);
@@ -208,7 +208,7 @@ void processCommandLine(int argc, char *argv[], int *what)
       else if (argv[i][0] == '-' && (argv[i][1] == 'd' || argv[i][1] == 'D')) {
           xstrcat(&tmp, argv[i]+2);
 	  debugLevel = (unsigned int)(atoi(tmp));
-	  free(tmp);
+	  nfree(tmp);
       } else {
           fprintf(fileserr, "Don't known \'%s\' option\n\n", argv[i]);
       }
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
 	 
 	 if (altImportLog) {
 	    config->importlog = keepOrigImportLog;
-	    free(altImportLog);
+	    nfree(altImportLog);
 	 }
 	 
          disposeConfig(config);

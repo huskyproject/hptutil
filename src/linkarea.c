@@ -6,7 +6,7 @@
  *
  * HPT is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2, or (at your option) any
+ * free Software Foundation; either version 2, or (at your option) any
  * later version.
  *
  * HPT is distributed in the hope that it will be useful, but
@@ -15,7 +15,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with HPT; see the file COPYING.  If not, write to the Free
+ * along with HPT; see the file COPYING.  If not, write to the free
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
 */
@@ -78,7 +78,7 @@ char *GetOnlyId(char *Id)
    ptr = strchr(Id, ' ');
    if (ptr) {
       str = strdup(ptr);
-      free(Id);
+      nfree(Id);
       return str;
    } else {
       return Id;
@@ -103,7 +103,6 @@ void SquishLinkArea(char *areaName)
 
    char       *sqd, *sqi, *ctrl;
 
-
    sqd = (char*)malloc(strlen(areaName)+5);
    sqi = (char*)malloc(strlen(areaName)+5);
 
@@ -111,15 +110,15 @@ void SquishLinkArea(char *areaName)
    sprintf(sqi, "%s%s", areaName, EXT_SQIFILE);
 
    SqdHandle = Open_File(sqd, fop_rpb);
-   free(sqd);
+   nfree(sqd);
 
    if (SqdHandle == -1) {
-      free(sqi);
+      nfree(sqi);
       return;
    } /* endif */
       
    SqiHandle = Open_File(sqi, fop_rpb);
-   free(sqi);
+   nfree(sqi);
 
    if (SqiHandle == -1) {
       close(SqdHandle);
@@ -167,7 +166,7 @@ void SquishLinkArea(char *areaName)
 
          msginfo[i]->msgnum = sqidx.umsgid;
 
-         free(ctrl);
+         nfree(ctrl);
 
       } /* endfor */
       
@@ -226,9 +225,9 @@ void SquishLinkArea(char *areaName)
 	 
 	 }
 
-         free(msginfo[i]->msgid);
-         free(msginfo[i]->reply);
-         free(msginfo[i]);
+         nfree(msginfo[i]->msgid);
+         nfree(msginfo[i]->reply);
+         nfree(msginfo[i]);
 
       } /* endfor */
 
@@ -236,7 +235,7 @@ void SquishLinkArea(char *areaName)
    } else {
    } /* endif */
 
-   free(msginfo);
+   nfree(msginfo);
 
    close(SqdHandle);
    close(SqiHandle);
@@ -303,15 +302,15 @@ void JamLinkArea(char *areaName)
    sprintf(idx, "%s%s", areaName, EXT_IDXFILE);
 
    IdxHandle = Open_File(idx, fop_rpb);
-   free(idx);
+   nfree(idx);
 
    if (IdxHandle == -1) {
-      free(hdr);
+      nfree(hdr);
       return;
    } /* endif */
 
    HdrHandle = Open_File(hdr, fop_rpb);
-   free(hdr);
+   nfree(hdr);
 
    if (HdrHandle == -1) {
       close(IdxHandle);
@@ -349,7 +348,7 @@ void JamLinkArea(char *areaName)
          ReplySub = GetSubField(Subf, JAMSFLD_REPLYID, LinkHdr.SubfieldLen);
 
          if (!MsgIdSub) {
-            free(Subf);
+            nfree(Subf);
             continue;
          } /* endif */
 
@@ -374,7 +373,7 @@ void JamLinkArea(char *areaName)
 
          msginfo[i]->msgnum = LinkHdr.MsgNum;
 
-         free(Subf);
+         nfree(Subf);
       } /* endfor */
 
       for (i = 0; i < msgs; i++) {
@@ -435,9 +434,9 @@ void JamLinkArea(char *areaName)
 	    }
 	 }
 
-         free(msginfo[i]->msgid);
-         free(msginfo[i]->reply);
-         free(msginfo[i]);
+         nfree(msginfo[i]->msgid);
+         nfree(msginfo[i]->reply);
+         nfree(msginfo[i]);
 
       } /* endfor */
 
@@ -449,7 +448,7 @@ void JamLinkArea(char *areaName)
    } else {
    } /* endif */
 
-   free(msginfo);
+   nfree(msginfo);
 
    close(IdxHandle);
    close(HdrHandle);
@@ -538,7 +537,7 @@ void linkAreas(s_fidoconfig *config)
                } /* endif */
             } /* endfor */
 
-            free(areaname);
+            nfree(areaname);
 
          } /* endwhile */
 

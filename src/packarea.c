@@ -6,7 +6,7 @@
  *
  * HPT is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2, or (at your option) any
+ * free Software Foundation; either version 2, or (at your option) any
  * later version.
  *
  * HPT is distributed in the hope that it will be useful, but
@@ -15,7 +15,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with HPT; see the file COPYING.  If not, write to the Free
+ * along with HPT; see the file COPYING.  If not, write to the free
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
 */
@@ -115,29 +115,29 @@ void SquishPackArea(char *areaName)
 
    NewSqdHandle = Open_File(newsqd, fop_wpb);
    if (NewSqdHandle == -1) {
-      free(sqd);
-      free(sqi);
-      free(newsqd);
-      free(newsqi);
+      nfree(sqd);
+      nfree(sqi);
+      nfree(newsqd);
+      nfree(newsqi);
       return;
    } /* endif */
    
    NewSqiHandle = Open_File(newsqi, fop_wpb);
    if (NewSqiHandle == -1) {
-      free(sqd);
-      free(sqi);
-      free(newsqd);
-      free(newsqi);
+      nfree(sqd);
+      nfree(sqi);
+      nfree(newsqd);
+      nfree(newsqi);
       close(NewSqdHandle);
       return;
    } /* endif */
 
    SqdHandle = Open_File(sqd, fop_rpb);
    if (SqdHandle == -1) {
-      free(sqd);
-      free(sqi);
-      free(newsqd);
-      free(newsqi);
+      nfree(sqd);
+      nfree(sqi);
+      nfree(newsqd);
+      nfree(newsqi);
       close(NewSqdHandle);
       close(NewSqiHandle);
       return;
@@ -145,10 +145,10 @@ void SquishPackArea(char *areaName)
    
    SqiHandle = Open_File(sqi, fop_rpb);
    if (SqiHandle == -1) {
-      free(sqd);
-      free(sqi);
-      free(newsqd);
-      free(newsqi);
+      nfree(sqd);
+      nfree(sqi);
+      nfree(newsqd);
+      nfree(newsqi);
       close(NewSqdHandle);
       close(NewSqiHandle);
       close(SqdHandle);
@@ -209,7 +209,7 @@ void SquishPackArea(char *areaName)
          sqbase.end_frame = tell(NewSqdHandle);
 
          write_sqidx(NewSqiHandle, &sqidx, 1);
-         free(text);
+         nfree(text);
 
          sqbase.num_msg++;
          sqbase.high_msg = sqbase.num_msg;
@@ -257,11 +257,11 @@ void SquishPackArea(char *areaName)
 
    } /* endif */
 
-   free(sqd);
-   free(sqi);
+   nfree(sqd);
+   nfree(sqi);
    
-   free(newsqd);
-   free(newsqi);
+   nfree(newsqd);
+   nfree(newsqi);
    
    return;
 }
@@ -310,35 +310,35 @@ void JamPackArea(char *areaName)
 
    NewHdrHandle = Open_File(newhdr, fop_wpb);
    if (NewHdrHandle == -1) {
-      free(hdr);
-      free(idx);
-      free(txt);
-      free(newhdr);
-      free(newidx);
-      free(newtxt);
+      nfree(hdr);
+      nfree(idx);
+      nfree(txt);
+      nfree(newhdr);
+      nfree(newidx);
+      nfree(newtxt);
       return;
    } /* endif */
    
    NewIdxHandle = Open_File(newidx, fop_wpb);
    if (NewIdxHandle == -1) {
-      free(hdr);
-      free(idx);
-      free(txt);
-      free(newhdr);
-      free(newidx);
-      free(newtxt);
+      nfree(hdr);
+      nfree(idx);
+      nfree(txt);
+      nfree(newhdr);
+      nfree(newidx);
+      nfree(newtxt);
       close(NewHdrHandle);
       return;
    } /* endif */
    
    NewTxtHandle = Open_File(newtxt, fop_wpb);
    if (NewTxtHandle == -1) {
-      free(hdr);
-      free(idx);
-      free(txt);
-      free(newhdr);
-      free(newidx);
-      free(newtxt);
+      nfree(hdr);
+      nfree(idx);
+      nfree(txt);
+      nfree(newhdr);
+      nfree(newidx);
+      nfree(newtxt);
       close(NewHdrHandle);
       close(NewIdxHandle);
       return;
@@ -346,12 +346,12 @@ void JamPackArea(char *areaName)
    
    HdrHandle = Open_File(hdr, fop_rpb);
    if (NewHdrHandle == -1) {
-      free(hdr);
-      free(idx);
-      free(txt);
-      free(newhdr);
-      free(newidx);
-      free(newtxt);
+      nfree(hdr);
+      nfree(idx);
+      nfree(txt);
+      nfree(newhdr);
+      nfree(newidx);
+      nfree(newtxt);
       close(NewHdrHandle);
       close(NewIdxHandle);
       close(NewTxtHandle);
@@ -360,12 +360,12 @@ void JamPackArea(char *areaName)
    
    IdxHandle = Open_File(idx, fop_rpb);
    if (NewIdxHandle == -1) {
-      free(hdr);
-      free(idx);
-      free(txt);
-      free(newhdr);
-      free(newidx);
-      free(newtxt);
+      nfree(hdr);
+      nfree(idx);
+      nfree(txt);
+      nfree(newhdr);
+      nfree(newidx);
+      nfree(newtxt);
       close(NewHdrHandle);
       close(NewIdxHandle);
       close(NewTxtHandle);
@@ -375,12 +375,12 @@ void JamPackArea(char *areaName)
    
    TxtHandle = Open_File(txt, fop_rpb);
    if (NewTxtHandle == -1) {
-      free(hdr);
-      free(idx);
-      free(txt);
-      free(newhdr);
-      free(newidx);
-      free(newtxt);
+      nfree(hdr);
+      nfree(idx);
+      nfree(txt);
+      nfree(newhdr);
+      nfree(newidx);
+      nfree(newtxt);
       close(NewHdrHandle);
       close(NewIdxHandle);
       close(NewTxtHandle);
@@ -443,10 +443,10 @@ void JamPackArea(char *areaName)
 
          write_hdr(NewHdrHandle, &PackHdr);
          write_subfield(NewHdrHandle, &Subf, PackHdr.SubfieldLen);
-         free(Subf);
+         nfree(Subf);
 
          farwrite(NewTxtHandle, text, PackHdr.TxtLen);
-         free(text);
+         nfree(text);
 
          write_idx(NewIdxHandle, &PackIdx);
 
@@ -478,8 +478,8 @@ void JamPackArea(char *areaName)
       lseek(NewHdrHandle, 0L, SEEK_SET);
       write_hdrinfo(NewHdrHandle, &HdrInfo);
 
-      free(numinfo);
-      free(replyinfo);
+      nfree(numinfo);
+      nfree(replyinfo);
 
       unlock(HdrHandle, 0, 1);
       
@@ -518,13 +518,13 @@ void JamPackArea(char *areaName)
 
    } /* endif */
 
-   free(newhdr);
-   free(newidx);
-   free(newtxt);
+   nfree(newhdr);
+   nfree(newidx);
+   nfree(newtxt);
    
-   free(hdr);
-   free(idx);
-   free(txt);
+   nfree(hdr);
+   nfree(idx);
+   nfree(txt);
 
    return;
 }
@@ -614,7 +614,7 @@ void packAreas(s_fidoconfig *config)
 		}
 	    }
         
-	    free(areaname);
+	    nfree(areaname);
 
 	 } /* endwhile */
 

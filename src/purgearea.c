@@ -6,7 +6,7 @@
  *
  * HPT is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2, or (at your option) any
+ * free Software Foundation; either version 2, or (at your option) any
  * later version.
  *
  * HPT is distributed in the hope that it will be useful, but
@@ -15,7 +15,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with HPT; see the file COPYING.  If not, write to the Free
+ * along with HPT; see the file COPYING.  If not, write to the free
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
 */
@@ -140,23 +140,25 @@ void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
    sprintf(sql, "%s%s", area->fileName, EXT_SQLFILE);
 
    SqdHandle = Open_File(sqd, fop_rpb);
-   free(sqd);
+   nfree(sqd);
 
    if (SqdHandle == -1) {
-      free(sqi);
+      nfree(sqi);
+      nfree(sql);
       return;
    } /* endif */
       
    SqiHandle = Open_File(sqi, fop_rpb);
-   free(sqi);
+   nfree(sqi);
 
    if (SqiHandle == -1) {
       close(SqdHandle);
+      nfree(sql);
       return;
    } /* endif */
 
    SqlHandle = Open_File(sql, fop_rpb);
-   free(sql);
+   nfree(sql);
 
    umsgid = 0;
    if (SqlHandle != -1) {
@@ -167,7 +169,7 @@ void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
             sql = (char*)calloc(sizeof(dword), sizeof(char));
             farread(SqlHandle, sql, sizeof(dword));
             umsgidTMP = get_dword(sql);
-            free(sql);
+            nfree(sql);
 	    if (umsgid > umsgidTMP) umsgid = umsgidTMP;
 	 }
       }
@@ -254,7 +256,7 @@ void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
          write_sqidx(SqiHandle, sqidx, msgs);
          chsize(SqiHandle, tell(SqiHandle));
 
-         free(sqidx);
+         nfree(sqidx);
       } else {
       } /* endif */
 
@@ -324,24 +326,25 @@ void JamPurgeArea(s_area *area, long *oldmsgs, long *purged)
 //   oldmsgs = newmsgs = 0;
 
    IdxHandle = Open_File(idx, fop_rpb);
-
-   free(idx);
+   nfree(idx);
 
    if (IdxHandle == -1) {
-      free(hdr);
+      nfree(hdr);
+      nfree(lrd);
       return;
    } /* endif */
 
    HdrHandle = Open_File(hdr, fop_rpb);
-
-   free(hdr);
+   nfree(hdr);
 
    if (HdrHandle == -1) {
       close(IdxHandle);
+      nfree(lrd);
       return;
    } /* endif */
 
    LrdHandle = Open_File(lrd, fop_rpb);
+   nfree(lrd);
 
    lastread = 0;
    if (LrdHandle != -1) {
@@ -352,7 +355,7 @@ void JamPurgeArea(s_area *area, long *oldmsgs, long *purged)
             lrd = (char*)calloc(sizeof(JAMLREAD), sizeof(char));
             farread(LrdHandle, lrd, sizeof(JAMLREAD));
             lstrdTMP = get_dword(lrd+8);
-            free(lrd);
+            nfree(lrd);
 	    if (lastread > lstrdTMP) lastread = lstrdTMP;
 	 }
       }
@@ -432,10 +435,6 @@ void JamPurgeArea(s_area *area, long *oldmsgs, long *purged)
    if (LrdHandle != -1) {
       close(LrdHandle);
    } /* endif */
-
-   free(hdr);
-   free(idx);
-   free(lrd);
 
    return;
 }
@@ -530,7 +529,7 @@ void purgeAreas(s_fidoconfig *config)
 		}
 	    }
         
-	    free(areaname);
+	    nfree(areaname);
 
 	 } /* endwhile */
 

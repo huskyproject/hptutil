@@ -6,7 +6,7 @@
  *
  * HPT is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2, or (at your option) any
+ * free Software Foundation; either version 2, or (at your option) any
  * later version.
  *
  * HPT is distributed in the hope that it will be useful, but
@@ -15,7 +15,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with HPT; see the file COPYING.  If not, write to the Free
+ * along with HPT; see the file COPYING.  If not, write to the free
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
 */
@@ -104,7 +104,7 @@ char *formatMsg(char **text, int len)
 	}
     }
     
-    free(*text);
+    nfree(*text);
     *text = buf;
 
     return ctrl;    
@@ -141,7 +141,8 @@ int SquishFixArea()
     SqdHandle = Open_File(sqd, fop_rob);
     if (SqdHandle == -1) {
 	OutScreen("\nError!\n\tCan't open \'%s\' fix file\n", sqd);
-	free(sqd);
+	nfree(sqd);
+	nfree(NewNameBase);
 	return 1;
     } /* endif */
 
@@ -192,8 +193,8 @@ int SquishFixArea()
 	    
 	    MsgCloseMsg(hmsg);
 	    
-	    free(text);
-	    free(ctlbuf);
+	    nfree(text);
+	    nfree(ctlbuf);
 	}
     }
     
@@ -212,8 +213,8 @@ int SquishFixArea()
     
     close(SqdHandle);
 
-    free(NewNameBase);
-    free(sqd);
+    nfree(NewNameBase);
+    nfree(sqd);
    
     return 0;
 }
@@ -243,7 +244,7 @@ int fixArea(s_fidoconfig *config)
 	rc = 5;
 	OutScreen("\nError!\n\tMsgOpenApi open error\n\n");
     }
-    free(basefilename);
+    nfree(basefilename);
     OutScreen("Fix area end\n\n");
     return rc;
 }
