@@ -1,0 +1,35 @@
+# $Id$
+# Makefile to build HPTUTIL/OS2 with gcc 3.x.x from EMX v0.9d.
+# No support for the Husky build environment.
+
+# include Husky-Makefile-Config,
+# copy this file from ../../huskybse/huskymak.cfg.emx
+include ../../huskymak.cfg
+
+include makefile.inc
+
+# includes directories
+CINCL= -I$(H_DIR) -I../../huskylib -I../../smapi -I../../fidoconf
+
+# libraries need to build binary file
+LIBS	= ../../fidoconf/make/$(LIBPREFIX)fidoconfig$(LIBSUFFIX)$(_LIB) \
+	  ../../smapi/make/$(LIBPREFIX)smapi$(LIBSUFFIX)$(_LIB) \
+	  ../../huskylib/make/$(LIBPREFIX)husky$(LIBSUFFIX)$(_LIB)
+
+READMEFILES= ../BUGS.v1.01 ../BUGS.v1.02 ../BUGS ../ChangeLog ../readme ../readme.rus
+
+default:
+	@echo Run 'make programs' to build static version of programs ($(PROGRAMS))
+	@echo Run 'make all' to build all above
+
+all:	programs
+
+programs: $(PROGRAMS)
+
+%$(_OBJ): $(_SRC_DIR)%$(_C)
+	@echo Compiling $<
+	@$(CC) $(CFLAGS) $(CDEFS) $(CINCL) $(OPTCFLAGS) $<
+
+$(PROGRAMS): $(OBJS)
+	@echo Create $(PROGRAMS)
+	@$(CC) $(STRIP) $(CFLAGS) $(CDEFS) $(CINCL) $(EXENAMEFLAG) $@ $^ $(LIBS)
