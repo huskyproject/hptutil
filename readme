@@ -1,0 +1,48 @@
+I have tested working under linux, not working... compiling. Package contains
+two files - for Watcom OS/2 and Linux. Who needed another makefiles - make it
+by himself. There was no msgbase crashing, etc. under Watcom (OS/2).
+
+Some information:
+
+hptutil purge - checked all keywords from fidoconfig (maybe I've forgoten
+something, but I tryed). From fidoconfig - keepUnread, killRead, purge, max.
+No packing, messages only "marked" as deleted. Reply chains not killed.
+
+hptutil pack - packing msgbase, used function of renaming files, thats why
+Golded can't stay in reading areas, in this case may be problems (1st warning!).
+Squish packing didn't set umsgid=1 on first letter. No lastread changeing, but
+if umsgid = FFFFFFFF - this is will be wrong - not checked (2nd warning!). In
+Jam base first letter also non 1, no lastread changing, but if BaseMsgNum will
+be FFFFFFFF and then 0 lastread's will be damaged - not checked (3rd warning!).
+Reply chains not killed.
+
+hptutil sort - if exist importlog file, sorting only areas in this file,
+sorting all areas if importlog not exist. File importlog not deleted. Sorting
+started from lastread, condition - date of the message. Reply chains is killed.
+
+hptutil link - if exist importlog file, linking only areas in this file,
+linking all areas if importlog not exist. The deletion of importlog subscribed
+in fidoconfig (and no deleted at all, if you use non documented option -k).
+Linking all active messages in area.
+
+Working as separate modules, for example
+
+hptutil purge
+hptutil pack
+
+and with several command line options
+
+hptutil sort link
+
+if you set several command line options, work will be not in this order,
+but first will be purge, then pack, sort, link.
+
+MSG bases non supported yet, but this is not hard to do it.
+
+This is like a "fish" - template which needs to be checked, better solutions in
+algorythm, etc.
+
+And the last thing - before run this tool, change sources to work with one
+area, and copy it to some place. Real work was only in OS/2 (watcom 11b).
+
+With best regards Fedor Lizunkov, 2:5020/960
