@@ -1,3 +1,4 @@
 - don't sort squish areas
 - don't purge -KillRead messages
 - hptutil pack damages .sqi files
+- hptutil sort doesn't works on squish
