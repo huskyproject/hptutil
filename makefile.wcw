@@ -1,15 +1,9 @@
-DEBUG   = 0
 CC      = wcc386
 LINK    = WLINK
 SRC     = src
 
-!IF $(DEBUG) == 1
-CFLAGS  = -d2 -hw -zq -wx -zp=1 -bt=nt -i=h;..\smapi;..\fidoconfig -oneatx -5
-LFLAGS  = DEBUG All
-!ELSE
-CFLAGS  = -zq -wx -bt=nt -zp=1 -ih;..\smapi;..\fidoconfig -oneatx -5
+CFLAGS  = -zq -wx -bt=nt -zp=1 -ih;.. -oneatx -5
 LFLAGS  =
-!ENDIF
 
 OBJS = sortarea.obj purgearea.obj packarea.obj linkarea.obj hptutil.obj
 

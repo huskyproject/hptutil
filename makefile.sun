@@ -1,5 +1,5 @@
 CC       = gcc
-CFLAGS   = -c -g -O2 -DUNIX -I./h -I../smapi -I../fidoconfig
+CFLAGS   = -c -g -O2 -DUNIX -I./h -I..
 LFLAGS   = -s -L../fidoconfig -L../smapi
 
 OBJS    = sortarea.o purgearea.o packarea.o linkarea.o hptutil.o
