@@ -15,7 +15,7 @@ $(OBJS): $(SRC)\*.c
 
 hptUtil.exe: $(OBJS)
   @echo linking hptUtil
-  $(LINK) $(LFLAGS) FILE sortarea.obj, purgearea.obj, packarea.obj, linkarea.obj, hptutil.obj Library ..\smapi\smapiwcw, ..\fidoconfig\fconfwcw.lib NAME hptUtil.exe
+  $(LINK) $(LFLAGS) FILE sortarea.obj, purgearea.obj, packarea.obj, linkarea.obj, hptutil.obj Library ..\smapi\smapiwcw, ..\fidoconf\fconfwcw.lib NAME hptUtil.exe
 
 clean:
 	-DEL *.OBJ
