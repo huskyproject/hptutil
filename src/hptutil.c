@@ -179,7 +179,7 @@ void processCommandLine(int argc, char *argv[], int *what)
       else if (stricmp(argv[i], "sort") == 0) *what |= 0x04;
       else if (stricmp(argv[i], "link") == 0) *what |= 0x08;
       else if (stricmp(argv[i], "fix") == 0) parseFixLine(argc, argv, &i, what);
-      else if (stricmp(argv[i], "undel") == 0) *what |= 0x11;
+      else if (stricmp(argv[i], "undel") == 0) *what |= 0x20;
       else if (stricmp(argv[i], "-k") == 0) keepImportLog = 1;
       else if (stricmp(argv[i], "-q") == 0) quiet = 1;
       else if (stricmp(argv[i], "-i") == 0) {
@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
 	    config->importlog = altImportLog;
 	 }
 	 if (what & 0x10) ret = fixArea(config);
-	 else if (what & 0x011) ret = undeleteMsgs(config, altImportLog);
+	 else if (what & 0x20) ret = undeleteMsgs(config, altImportLog);
 	 else {
              if (what & 0x04) sortAreas(config);
              if (what & 0x08) linkAreas(config);
