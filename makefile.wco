@@ -14,18 +14,18 @@ LFLAGS  =
 OBJS = sortarea.obj, purgearea.obj, packarea.obj, linkarea.obj, hptutil.obj
 
 all: $(OBJS) \
-     hptUtil.exe
+     hptutil.exe
 
 $(OBJS): $(SRC)\$*.c
   @echo compiling $*.c
   $(CC) $(CFLAGS) $(SRC)\$*.c
 
-hptUtil.exe: $(OBJS)
-  @echo linking hptUtil
-  $(LINK) $(LFLAGS) FILE $(OBJS) Library ..\smapi\smapiwco, ..\fidoconfig\fidoconfig.lib NAME hptUtil.exe
+hptutil.exe: $(OBJS)
+  @echo linking hptutil
+  $(LINK) $(LFLAGS) FILE $(OBJS) Library ..\smapi\smapiwco, ..\fidoconfig\fidoconfig.lib NAME hptutil.exe
 
 clean:
 	-DEL *.OBJ
 	-DEL *.err
-	-DEL hptUtil.exe
+	-DEL hptutil.exe
 

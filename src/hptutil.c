@@ -44,10 +44,10 @@ void processCommandLine(int argc, char *argv[], int *what)
 
    if (argc == 1) {
       printf("\nUsage:\n\n");
-      printf("      hptUtil purge - purge areas\n");
-      printf("      hptUtil pack  - pack areas\n");
-      printf("      hptUtil link  - reply-link messages\n");
-      printf("      hptUtil sort  - sort unread messages by time and date\n");
+      printf("      hptutil purge - purge areas\n");
+      printf("      hptutil pack  - pack areas\n");
+      printf("      hptutil link  - reply-link messages\n");
+      printf("      hptutil sort  - sort unread messages by time and date\n");
    } /* endif */
 
    while (i < argc-1) {
@@ -69,22 +69,23 @@ int main(int argc, char *argv[])
    int ret = 0;
 
 #if defined(__linux__)
-   printf("hptUtil v%u.%02u/lnx\n", VER_MAJOR, VER_MINOR);
+   printf("hptutil v%u.%02u/lnx\n", VER_MAJOR, VER_MINOR);
 #elif defined(__freebsd__)
-   printf("hptUtil v%u.%02u/bsd\n", VER_MAJOR, VER_MINOR);
+   printf("hptutil v%u.%02u/bsd\n", VER_MAJOR, VER_MINOR);
 #elif defined(__OS2__)
-   printf("hptUtil v%u.%02u/os2\n", VER_MAJOR, VER_MINOR);
+   printf("hptutil v%u.%02u/os2\n", VER_MAJOR, VER_MINOR);
 #elif defined(__NT__)
-   printf("hptUtil v%u.%02u/w32\n", VER_MAJOR, VER_MINOR);
+   printf("hptutil v%u.%02u/w32\n", VER_MAJOR, VER_MINOR);
 #elif defined(__sun__)
-   printf("hptUtil v%u.%02u/sun\n", VER_MAJOR, VER_MINOR);
+   printf("hptutil v%u.%02u/sun\n", VER_MAJOR, VER_MINOR);
 #else
-   printf("hptUtil v%u.%02u\n", VER_MAJOR, VER_MINOR);
+   printf("hptutil v%u.%02u\n", VER_MAJOR, VER_MINOR);
 #endif
 
    processCommandLine(argc, argv, &what);
 
    if (what) {
+      setvar("module", "hptutil");
       config = readConfig(NULL);
       if (config) {
          if (what & 1) purgeAreas(config);

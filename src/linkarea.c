@@ -250,7 +250,7 @@ void SquishLinkArea(char *areaName)
 
 /* --------------------------JAM sector ON---------------------------------- */
 
-JAMSUBFIELDptr GetSubField(JAMSUBFIELDptr subf, dword what, dword len)
+JAMSUBFIELDptr GetSubField(JAMSUBFIELDptr subf, word what, dword len)
 {
    JAMSUBFIELDptr SubField;
    dword SubPos = 0;
@@ -288,6 +288,7 @@ void JamLinkArea(char *areaName)
    int        IdxHandle;
    int        HdrHandle;
    long       i, ii, msgs;
+   int        x;
 
    char       *hdr, *idx;
 
@@ -299,8 +300,8 @@ void JamLinkArea(char *areaName)
 
    JAMINFOpptr msginfo = NULL;
 
-   hdr = (char*)malloc(strlen(areaName)+5);
-   idx = (char*)malloc(strlen(areaName)+5);
+   hdr = (char*)malloc(x=strlen(areaName)+5);
+   idx = (char*)malloc(x);
 
    sprintf(hdr, "%s%s", areaName, EXT_HDRFILE);
    sprintf(idx, "%s%s", areaName, EXT_IDXFILE);

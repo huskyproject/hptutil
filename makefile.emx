@@ -14,13 +14,13 @@ endif
 
 
 all: $(OBJS) \
-    hptUtil.exe
+    hptutil.exe
 
 %.o: $(SRC_DIR)%.c
 	$(CC) $(CFLAGS) $(SRC_DIR)$*.c
 
-hptUtil.exe: $(OBJS)
-	$(CC) $(LFLAGS) -o hptUtil.exe $(OBJS) -lfconfemx -lsmapiemx
+hptutil.exe: $(OBJS)
+	$(CC) $(LFLAGS) -o hptutil.exe $(OBJS) -lfconfemx -lsmapiemx
 
 clean:
 	-rm -f *.o
