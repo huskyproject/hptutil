@@ -98,6 +98,7 @@ void SquishPackArea(char *areaName)
       free(newsqd);
       free(newsqi);
       close(NewSqdHandle);
+      return;
    } /* endif */
 
    SqdHandle = Open_File(sqd, fop_rpb);
@@ -108,6 +109,7 @@ void SquishPackArea(char *areaName)
       free(newsqi);
       close(NewSqdHandle);
       close(NewSqiHandle);
+      return;
    } /* endif */
    SqiHandle = Open_File(sqi, fop_rpb);
    if (SqiHandle == -1) {
@@ -118,6 +120,7 @@ void SquishPackArea(char *areaName)
       close(NewSqdHandle);
       close(NewSqiHandle);
       close(SqdHandle);
+      return;
    } /* endif */
 
    if (lock(SqdHandle, 0, 1) == 0) {
