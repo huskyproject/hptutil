@@ -176,13 +176,23 @@ void parseFixLine(int argc, char *argv[], int *i, int *what)
     }
 }
 
+static void printMyTitle()
+{
+   static int already = 0;
+
+   if (!already) {
+      if (filesout) fprintf(filesout, "%s\n\n", versionStr);
+      already = 1;
+   }
+}
+
 void processCommandLine(int argc, char *argv[], int *what)
 {
    int i = 0;
    char *tmp = NULL;
 
    if (argc == 1) {
-
+   printMyTitle();
    printf("Usage: hptutil [options]\n"
    "Options:  sort\t\t- sort unread messages by time and date\n"
    "\t  link\t\t- reply-link messages\n"
@@ -192,7 +202,7 @@ void processCommandLine(int argc, char *argv[], int *what)
    "\t  -j\t\t- link Jam areas by CRC (great speed-up)\n"
    "\t  -k\t\t- keep import.log file\n"
    "\t  -q\t\t- quiet mode (no screen output)\n"
-   "\t  -i<filename>\t- alternative import.log\n\n");
+   "\t  -i <filename>\t- alternative import.log\n\n");
    exit(1);
    } /* endif */
 
@@ -212,7 +222,8 @@ void processCommandLine(int argc, char *argv[], int *what)
               i++;
 	      xstrcat(&altImportLog, argv[i]);
 	  } else {
-	      fprintf(fileserr, "Not found option for \'-i\' key!\n\n");
+              printMyTitle();
+	      fprintf(fileserr, "Parameter is required for '-i'\n\n");
 	      exit (5);
 	  }
       }
@@ -226,7 +237,8 @@ void processCommandLine(int argc, char *argv[], int *what)
 	      debugLevel = (unsigned int)(atoi(tmp));
 	      nfree(tmp);
           } else {
-	      fprintf(fileserr, "Not found option for \'-d\' key!\n\n");
+              printMyTitle();
+	      fprintf(fileserr, "Parameter is required for '-d'\n\n");
 	      exit (5);
 	  }
       }
@@ -235,7 +247,8 @@ void processCommandLine(int argc, char *argv[], int *what)
 	  debugLevel = (unsigned int)(atoi(tmp));
 	  nfree(tmp);
       } else {
-          fprintf(fileserr, "Don't known \'%s\' option\n\n", argv[i]);
+          printMyTitle();
+          fprintf(fileserr, "Unknown option '%s'\n\n", argv[i]);
       }
    } /* endwhile */
 }
@@ -248,8 +261,7 @@ int main(int argc, char *argv[])
    int what = 0;
    int ret = 0;
 
-   if (quiet) filesout=NULL;
-   else filesout=stdout;
+   filesout=stdout;
    fileserr=stderr;
    
    setbuf(filesout, NULL);
@@ -257,9 +269,10 @@ int main(int argc, char *argv[])
 
    versionStr = GenVersionStr( "hptutil", VER_MAJOR, VER_MINOR, VER_PATCH,
                                VER_BRANCH, cvs_date);
-   fprintf(filesout, "%s\n\n", versionStr);
    
    processCommandLine(argc, argv, &what);
+   if (quiet) filesout=NULL;
+   printMyTitle();
  
    if (what) {
       setvar("module", "hptutil");
