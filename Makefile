@@ -14,9 +14,9 @@ else
 endif
 
 ifeq ($(SHORTNAME), 1)
-  LIBS=-L$(LIBDIR) -lhusky -lfidoconf -lsmapi
+  LIBS=-L$(LIBDIR) -lsmapi -lfidoconf -lhusky 
 else
-  LIBS=-L$(LIBDIR) -lhusky -lfidoconfig -lsmapi
+  LIBS=-L$(LIBDIR) -lsmapi -lfidoconfig -lhusky 
 endif
 
 
