@@ -40,14 +40,13 @@
 #include <undelete.h>
 
 #include "version.h"
-#include "cvsdate.h"
+
+char *versionStr;
 
 FILE *filesout;
 FILE *fileserr;
 #define LogFileName "hptutil.log"
 FILE *hptutil_log = NULL;
-
-char *versionStr;
 
 char quiet = 0;
 char jam_by_crc = 0;
@@ -117,7 +116,7 @@ void printFixHelp()
     versionStr = GenVersionStr( "hptutil", VER_MAJOR, VER_MINOR, VER_PATCH,
                                VER_BRANCH, cvs_date);
     fprintf(filesout, "%s\n", versionStr);
-    fprintf(filesout, "Usage:");
+    fprintf(filesout, "\nUsage:");
     OutScreen("\thptutil fix -s <%cpath%cand%cfilename>",
 			    PATH_DELIM, PATH_DELIM, PATH_DELIM);
     OutScreen(" - fix squish filename\n");
@@ -191,7 +190,7 @@ void processCommandLine(int argc, char *argv[], int *what)
       versionStr = GenVersionStr( "hptutil", VER_MAJOR, VER_MINOR, VER_PATCH,
                                   VER_BRANCH, cvs_date);
       fprintf(filesout, "%s\n", versionStr);
-      fprintf(filesout, "Usage:");
+      fprintf(filesout, "\nUsage:");
       OutScreen("\thptutil sort  - sort unread messages by time and date\n");
       OutScreen("\thptutil link  - reply-link messages\n");
       OutScreen("\thptutil purge - purge areas\n");
