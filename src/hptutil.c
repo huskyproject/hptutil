@@ -68,16 +68,16 @@ int main(int argc, char *argv[])
    int what = 0;
    int ret = 0;
 
-#ifdef __linux__
-   printf("hptUtil v%u.%02u/LNX\n", VER_MAJOR, VER_MINOR);
-#elif __freebsd__
-   printf("hptUtil v%u.%02u/BSD\n", VER_MAJOR, VER_MINOR);
-#elif __OS2__
-   printf("hptUtil v%u.%02u/OS2\n", VER_MAJOR, VER_MINOR);
-#elif __NT__
-   printf("hptUtil v%u.%02u/NT\n", VER_MAJOR, VER_MINOR);
-#elif __sun__
-   printf("hptUtil v%u.%02u/SUN\n", VER_MAJOR, VER_MINOR);
+#if defined(__linux__)
+   printf("hptUtil v%u.%02u/lnx\n", VER_MAJOR, VER_MINOR);
+#elif defined(__freebsd__)
+   printf("hptUtil v%u.%02u/bsd\n", VER_MAJOR, VER_MINOR);
+#elif defined(__OS2__)
+   printf("hptUtil v%u.%02u/os2\n", VER_MAJOR, VER_MINOR);
+#elif defined(__NT__)
+   printf("hptUtil v%u.%02u/w32\n", VER_MAJOR, VER_MINOR);
+#elif defined(__sun__)
+   printf("hptUtil v%u.%02u/sun\n", VER_MAJOR, VER_MINOR);
 #else
    printf("hptUtil v%u.%02u\n", VER_MAJOR, VER_MINOR);
 #endif
