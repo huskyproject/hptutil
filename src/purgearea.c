@@ -106,7 +106,7 @@ void SquishDelMsg(int SqdHandle, int SqiHandle, SQBASEptr psqbase, SQHDRptr psqh
 
 }
 
-void SquishPurgeArea(s_area *area)
+void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
 {
    int      SqdHandle;
    int      SqiHandle;
@@ -176,7 +176,7 @@ void SquishPurgeArea(s_area *area)
       read_sqbase(SqdHandle, &sqbase);
 
       lseek(SqiHandle, 0L, SEEK_END);
-      msgs = tell(SqiHandle)/SQIDX_SIZE;
+      *oldmsgs = msgs = tell(SqiHandle)/SQIDX_SIZE;
       lseek(SqiHandle, 0L, SEEK_SET);
 
       if (msgs) {
@@ -214,6 +214,7 @@ void SquishPurgeArea(s_area *area)
             if (area->killRead) {
                if (lastread >= sqbase.num_msg) {
                   SquishDelMsg(SqdHandle, SqiHandle, &sqbase, &sqhdr, sqidx, SqdPos, &msgs, &i);
+                  (*purged)++;
                   continue;
                } /* endif */
             } /* endif */
@@ -227,6 +228,7 @@ void SquishPurgeArea(s_area *area)
                msgtime = mktime(&tmTime);
                if ((curtime - msgtime) > (area->purge * 24 * 60 * 60) ) {
                   SquishDelMsg(SqdHandle, SqiHandle, &sqbase, &sqhdr, sqidx, SqdPos, &msgs, &i);
+                  (*purged)++;
                   continue;
                } /* endif */
             } /* endif */
@@ -234,6 +236,7 @@ void SquishPurgeArea(s_area *area)
             if (area->max) {
                if (sqbase.num_msg > area->max) {
                   SquishDelMsg(SqdHandle, SqiHandle, &sqbase, &sqhdr, sqidx, SqdPos, &msgs, &i);
+                  (*purged)++;
                } else {
                } /* endif */
             } else {
@@ -289,7 +292,7 @@ void JamDelMsg(int HdrHandle, int IdxHandle, JAMHDRINFOptr HdrInfo, JAMHDRptr Hd
 
 }
 
-void JamPurgeArea(s_area *area)
+void JamPurgeArea(s_area *area, long *oldmsgs, long *purged)
 {
    int        IdxHandle;
    int        HdrHandle;
@@ -356,7 +359,7 @@ void JamPurgeArea(s_area *area)
       read_hdrinfo(HdrHandle, &HdrInfo);
 
       lseek(IdxHandle, 0L, SEEK_END);
-      msgs = tell(IdxHandle) / IDX_SIZE;
+      *oldmsgs = msgs = tell(IdxHandle) / IDX_SIZE;
       lseek(IdxHandle, 0L, SEEK_SET);
 
       for (i = 0; i < msgs; i++) {
@@ -386,6 +389,7 @@ void JamPurgeArea(s_area *area)
          if (area->killRead) {
             if (lastread >= PurgeHdr.MsgNum) {
                JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
+               (*purged)++;
                continue;
             } /* endif */
          } /* endif */
@@ -398,6 +402,7 @@ void JamPurgeArea(s_area *area)
             } /* endif */
             if (abs(curtime - msgtime) > (area->purge * 24 * 60 * 60) ) {
                JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
+               (*purged)++;
                continue;
             } /* endif */
          } /* endif */
@@ -405,6 +410,7 @@ void JamPurgeArea(s_area *area)
          if (area->max) {
             if (HdrInfo.ActiveMsgs > area->max) {
                JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
+               (*purged)++;
             } else {
             } /* endif */
          } else {
@@ -431,22 +437,24 @@ void JamPurgeArea(s_area *area)
 }
 /* --------------------------JAM sector OFF--------------------------------- */
 
-void purgeArea(s_area *area)
+void purgeArea(s_area *area, long *oldmsgs, long *purged)
 {
    int make = 0;
+   *purged = *oldmsgs = 0;
+
    if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
       fprintf(outfile, "is JAM ... ");
-      JamPurgeArea(area);
+      JamPurgeArea(area, oldmsgs, purged);
       make = 1;
    } else {
       if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
          fprintf(outfile, "is Squish ... ");
-         SquishPurgeArea(area);
+         SquishPurgeArea(area, oldmsgs, purged);
          make = 1;
       } else {
          if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
             fprintf(outfile, "is MSG ... ");
-//            MsgPurgeArea(area);
+//            MsgPurgeArea(area, oldmsgs, purged);
             make = 1;
          } else {
             if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
@@ -458,6 +466,7 @@ void purgeArea(s_area *area)
    } /* endif */
 
    if (make) {
+      fprintf(outfile, "%lu-%lu=%lu, ", *oldmsgs, *purged, *oldmsgs-*purged);
       fprintf(outfile, "Done\n");
    } else {
       fprintf(outfile, "Ignore\n");
@@ -467,6 +476,8 @@ void purgeArea(s_area *area)
 void purgeAreas(s_fidoconfig *config)
 {
    int  i;
+   long totoldmsgs = 0, totpurged = 0;
+   long areaoldmsgs, areapurged;
 
    outfile=stdout;
 
@@ -476,21 +487,29 @@ void purgeAreas(s_fidoconfig *config)
    // EchoAreas
    for (i = 0; i < config->echoAreaCount; i++) {
       fprintf(outfile, "EchoArea %s ", config->echoAreas[i].areaName);
-      purgeArea(&(config->echoAreas[i]));
+      purgeArea(&(config->echoAreas[i]), &areaoldmsgs, &areapurged);
+      totoldmsgs+=areaoldmsgs;
+      totpurged+=areapurged;
    } /* endfor */
 
    // LocalAreas
    for (i = 0; i < config->localAreaCount; i++) {
       fprintf(outfile, "LocalArea %s ", config->localAreas[i].areaName);
-      purgeArea(&(config->localAreas[i]));
+      purgeArea(&(config->localAreas[i]), &areaoldmsgs, &areapurged);
+      totoldmsgs+=areaoldmsgs;
+      totpurged+=areapurged;
    } /* endfor */
 
    // NetAreas
    for (i = 0; i < config->netMailAreaCount; i++) {
       fprintf(outfile, "NetArea %s ", config->netMailAreas[i].areaName);
-      purgeArea(&(config->netMailAreas[i]));
+      purgeArea(&(config->netMailAreas[i]), &areaoldmsgs, &areapurged);
+      totoldmsgs+=areaoldmsgs;
+      totpurged+=areapurged;
    } /* endfor */
 
    fprintf(outfile, "Purge areas end\n");
+   fprintf(outfile, "Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n", 
+           totoldmsgs, totpurged, totoldmsgs-totpurged);
 }
 
