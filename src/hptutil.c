@@ -39,10 +39,15 @@
 #include <fixarea.h>
 #include <undelete.h>
 
+#include "version.h"
+#include "cvsdate.h"
+
 FILE *filesout;
 FILE *fileserr;
 #define LogFileName "hptutil.log"
 FILE *hptutil_log = NULL;
+
+char *versionStr;
 
 char quiet = 0;
 char jam_by_crc = 0;
@@ -107,33 +112,16 @@ void wait_d()
     OutScreen("\b%c", form[i++]);
 }
 
-void printVer()
-{
-#if defined(__linux__)
-   OutScreen("\nhptutil v%u.%u/lnx\n\n", VER_MAJOR, VER_MINOR);
-#elif defined(__freebsd__)
-   OutScreen("\nhptutil v%u.%u/bsd\n\n", VER_MAJOR, VER_MINOR);
-#elif defined(__OS2__)
-   OutScreen("\nhptutil v%u.%u/os2\n\n", VER_MAJOR, VER_MINOR);
-#elif defined(__NT__)
-   OutScreen("\nhptutil v%u.%u/w32\n\n", VER_MAJOR, VER_MINOR);
-#elif defined(__sun__)
-   OutScreen("\nhptutil v%u.%u/sun\n\n", VER_MAJOR, VER_MINOR);
-#elif defined(__DJGPP__)
-   OutScreen("\nhptutil v%u.%u/dpmi\n\n", VER_MAJOR, VER_MINOR);
-#else
-   OutScreen("\nhptutil v%u.%u\n\n", VER_MAJOR, VER_MINOR);
-#endif
-
-}
-
 void printFixHelp()
 {
-    printVer();
-    OutScreen("hptutil fix -s <%cpath%cand%cfilename>",
+    versionStr = GenVersionStr( "hptutil", VER_MAJOR, VER_MINOR, VER_PATCH,
+                               VER_BRANCH, cvs_date);
+    fprintf(filesout, "%s\n", versionStr);
+    fprintf(filesout, "Usage:");
+    OutScreen("\thptutil fix -s <%cpath%cand%cfilename>",
 			    PATH_DELIM, PATH_DELIM, PATH_DELIM);
     OutScreen(" - fix squish filename\n");
-    OutScreen("hptutil fix -j <%cpath%cand%cfilename>",
+    OutScreen("\thptutil fix -j <%cpath%cand%cfilename>",
 			    PATH_DELIM, PATH_DELIM, PATH_DELIM);
     OutScreen(" - fix jam filename\n\n");
     exit(0);
@@ -200,17 +188,19 @@ void processCommandLine(int argc, char *argv[], int *what)
    char *tmp = NULL;
 
    if (argc == 1) {
-      printVer();
-      fprintf(filesout, "Usage:\n\n");
-      OutScreen("      hptutil sort  - sort unread messages by time and date\n");
-      OutScreen("      hptutil link  - reply-link messages\n");
-      OutScreen("      hptutil purge - purge areas\n");
-      OutScreen("      hptutil pack  - pack areas\n");
-      OutScreen("      hptutil fix   - fix base (hptutil fix -? for more help)\n");
-      OutScreen("      hptutil -j    - link Jam areas by CRC (great speed-up)\n");
-      OutScreen("      hptutil -k    - keep import.log file\n");
-      OutScreen("      hptutil -q    - quiet mode (no screen output)\n");
-      OutScreen("      hptutil -i <filename> - alternative import.log\n\n");
+      versionStr = GenVersionStr( "hptutil", VER_MAJOR, VER_MINOR, VER_PATCH,
+                                  VER_BRANCH, cvs_date);
+      fprintf(filesout, "%s\n", versionStr);
+      fprintf(filesout, "Usage:");
+      OutScreen("\thptutil sort  - sort unread messages by time and date\n");
+      OutScreen("\thptutil link  - reply-link messages\n");
+      OutScreen("\thptutil purge - purge areas\n");
+      OutScreen("\thptutil pack  - pack areas\n");
+      OutScreen("\thptutil fix   - fix base (hptutil fix -? for more help)\n");
+      OutScreen("\thptutil -j    - link Jam areas by CRC (great speed-up)\n");
+      OutScreen("\thptutil -k    - keep import.log file\n");
+      OutScreen("\thptutil -q    - quiet mode (no screen output)\n");
+      OutScreen("\thptutil -i <filename> - alternative import.log\n\n");
       exit(1);
    } /* endif */
 
@@ -277,7 +267,9 @@ int main(int argc, char *argv[])
 
    processCommandLine(argc, argv, &what);
    
-   printVer();
+   versionStr = GenVersionStr( "hptutil", VER_MAJOR, VER_MINOR, VER_PATCH,
+                               VER_BRANCH, cvs_date);
+   fprintf(filesout, "%s\n", versionStr);
    
    if (what) {
       setvar("module", "hptutil");
