@@ -444,34 +444,37 @@ void purgeArea(s_area *area, long *oldmsgs, long *purged)
    int make = 0;
    *purged = *oldmsgs = 0;
 
-   if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
-      fprintf(outfile, "is JAM ... ");
-      JamPurgeArea(area, oldmsgs, purged);
-      make = 1;
-   } else {
-      if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
-         fprintf(outfile, "is Squish ... ");
-         SquishPurgeArea(area, oldmsgs, purged);
-         make = 1;
-      } else {
-         if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
-            fprintf(outfile, "is MSG ... ");
+   if (area->nopack) fprintf(outfile, "has nopack option ... ");
+   else {
+	   if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
+		   fprintf(outfile, "is JAM ... ");
+		   JamPurgeArea(area, oldmsgs, purged);
+		   make = 1;
+	   } else {
+		   if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
+			   fprintf(outfile, "is Squish ... ");
+			   SquishPurgeArea(area, oldmsgs, purged);
+			   make = 1;
+		   } else {
+			   if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
+				   fprintf(outfile, "is MSG ... ");
 //            MsgPurgeArea(area, oldmsgs, purged);
-            make = 1;
-         } else {
-            if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
-               fprintf(outfile, "is PASSTHROUGH ... ");
-            } else {
-            } /* endif */
-         } /* endif */
-      } /* endif */
-   } /* endif */
+				   make = 1;
+			   } else {
+				   if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
+					   fprintf(outfile, "is PASSTHROUGH ... ");
+				   } else {
+				   } /* endif */
+			   } /* endif */
+		   } /* endif */
+	   } /* endif */
+   }
 
    if (make) {
-      fprintf(outfile, "%lu-%lu=%lu, ", *oldmsgs, *purged, *oldmsgs-*purged);
-      fprintf(outfile, "Done\n");
+	   fprintf(outfile, "%lu-%lu=%lu, ", *oldmsgs, *purged, *oldmsgs-*purged);
+	   fprintf(outfile, "Done\n");
    } else {
-      fprintf(outfile, "Ignore\n");
+	   fprintf(outfile, "Ignore\n");
    } /* endif */
 }
 

@@ -465,31 +465,34 @@ void JamPackArea(char *areaName)
 void packArea(s_area *area)
 {
    int make = 0;
-   if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
-      fprintf(outfile, "is JAM ... ");
-      JamPackArea(area->fileName);
-      make = 1;
-   } else {
-      if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
-         fprintf(outfile, "is Squish ... ");
-         SquishPackArea(area->fileName);
-         make = 1;
-      } else {
-         if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
-            fprintf(outfile, "is MSG ... ");
-         } else {
-            if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
-               fprintf(outfile, "is PASSTHROUGH ... ");
-            } else {
-            } /* endif */
-         } /* endif */
-      } /* endif */
-   } /* endif */
+   if (area->nopack) fprintf(outfile, "has nopack option ... ");
+   else {
+	   if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
+		   fprintf(outfile, "is JAM ... ");
+		   JamPackArea(area->fileName);
+		   make = 1;
+	   } else {
+		   if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
+			   fprintf(outfile, "is Squish ... ");
+			   SquishPackArea(area->fileName);
+			   make = 1;
+		   } else {
+			   if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
+				   fprintf(outfile, "is MSG ... ");
+			   } else {
+				   if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
+					   fprintf(outfile, "is PASSTHROUGH ... ");
+				   } else {
+				   } /* endif */
+			   } /* endif */
+		   } /* endif */
+	   } /* endif */
+   }   
 
    if (make) {
-      fprintf(outfile, "Done\n");
+	   fprintf(outfile, "Done\n");
    } else {
-      fprintf(outfile, "Ignore\n");
+	   fprintf(outfile, "Ignore\n");
    } /* endif */
 }
 
