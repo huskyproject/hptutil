@@ -176,15 +176,15 @@ typedef struct
     (((dword)((unsigned char)(ptr)[3])) << 24))  \
 */
 
-int read_hdrinfo(sword handle, JAMHDRINFO *HdrInfo);
-int read_idx(sword handle, JAMIDXREC *Idx);
-int read_hdr(sword handle, JAMHDR *Hdr);
-int read_subfield(sword handle, JAMSUBFIELDptr *subfield, dword *SubfieldLen);
+int read_hdrinfo(int handle, JAMHDRINFO *HdrInfo);
+int read_idx(int handle, JAMIDXREC *Idx);
+int read_hdr(int handle, JAMHDR *Hdr);
+int read_subfield(int handle, JAMSUBFIELDptr *subfield, dword *SubfieldLen);
 
-int write_hdrinfo(sword handle, JAMHDRINFO *HdrInfo);
-int write_idx(sword handle, JAMIDXREC *Idx);
-int write_hdr(sword handle, JAMHDR *Hdr);
-int write_subfield(sword handle, JAMSUBFIELDptr *subfield, dword SubfieldLen);
+int write_hdrinfo(int handle, JAMHDRINFO *HdrInfo);
+int write_idx(int handle, JAMIDXREC *Idx);
+int write_hdr(int handle, JAMHDR *Hdr);
+int write_subfield(int handle, JAMSUBFIELDptr *subfield, dword SubfieldLen);
 
 #if defined(UNIX)
 #define chsize ftruncate
