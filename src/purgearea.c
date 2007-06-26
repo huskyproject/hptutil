@@ -229,7 +229,8 @@ void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
                   DosDate_to_TmDate((union stamp_combo*)&(xmsg.date_arrived), &tmTime);
                } /* endif */
                msgtime = mktime(&tmTime);
-               if ((curtime - msgtime) > (area->purge * 24 * 60 * 60) ) {
+               if (curtime >= msgtime &&
+				   (unsigned long)(curtime - msgtime) > (area->purge * 24 * 60 * 60) ) {
                   SquishDelMsg(SqdHandle, SqiHandle, &sqbase, &sqhdr, sqidx, SqdPos, &msgs, &i);
                   (*purged)++;
                   continue;
@@ -406,7 +407,8 @@ void JamPurgeArea(s_area *area, long *oldmsgs, long *purged)
             } else {
                msgtime = PurgeHdr.DateProcessed;
             } /* endif */
-            if (abs(curtime - msgtime) > (area->purge * 24 * 60 * 60) ) {
+            if (curtime > msgtime &&
+                (dword)(curtime - msgtime) > (area->purge * 24 * 60 * 60) ) {
                JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
                (*purged)++;
                continue;
@@ -480,7 +482,7 @@ void purgeArea(s_area *area, long *oldmsgs, long *purged)
 
 void purgeAreas(s_fidoconfig *config)
 {
-   int  i;
+   unsigned int  i;
    long totoldmsgs = 0, totpurged = 0;
    long areaoldmsgs, areapurged;
    
