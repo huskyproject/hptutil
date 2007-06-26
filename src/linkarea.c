@@ -156,8 +156,8 @@ void SquishLinkArea(char *areaName)
 
          farread(SqdHandle, ctrl, sqhdr.clen);
 
-         msginfo[i]->msgid = GetCtrlToken(ctrl, "MSGID: ");
-         msginfo[i]->reply = GetCtrlToken(ctrl, "REPLY: ");
+         msginfo[i]->msgid = (char*)GetCtrlToken((byte*)ctrl, (byte*)"MSGID: ");
+         msginfo[i]->reply = (char*)GetCtrlToken((byte*)ctrl, (byte*)"REPLY: ");
 	 
 
          msginfo[i]->msgid = GetOnlyId(msginfo[i]->msgid);
@@ -263,7 +263,7 @@ JAMSUBFIELDptr GetSubField(JAMSUBFIELDptr subf, word what, dword len)
 
 int CheckMsg(JAMHDRptr Hdr)
 {
-   if (stricmp(Hdr->Signature, "JAM") != 0) {
+   if (stricmp((char*)Hdr->Signature, "JAM") != 0) {
       return 0;
    } /* endif */
 
@@ -360,13 +360,13 @@ void JamLinkArea(char *areaName)
 	 msginfo[i]->HdrOffset = LinkIdx.HdrOffset;
 
          msginfo[i]->msgid = (char*)calloc(MsgIdSub->DatLen+1, sizeof(char));
-         strncpy(msginfo[i]->msgid, MsgIdSub->Buffer, MsgIdSub->DatLen);
+         strncpy(msginfo[i]->msgid, (char*)MsgIdSub->Buffer, MsgIdSub->DatLen);
 
          msginfo[i]->msgid = GetOnlyId(msginfo[i]->msgid);
 
          if (ReplySub) {
             msginfo[i]->reply = (char*)calloc(ReplySub->DatLen+1, sizeof(char));
-            strncpy(msginfo[i]->reply, ReplySub->Buffer, ReplySub->DatLen);
+            strncpy(msginfo[i]->reply, (char*)ReplySub->Buffer, ReplySub->DatLen);
             msginfo[i]->reply = GetOnlyId(msginfo[i]->reply);
          } /* endif */
 
@@ -631,7 +631,7 @@ void linkArea(s_area *area)
 
 void linkAreas(s_fidoconfig *config)
 {
-   int    i;
+   unsigned int    i;
    char   *areaname;
 
    FILE   *f;
