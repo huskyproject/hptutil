@@ -60,17 +60,20 @@ FOFS findHdrId(int SqdHandle)
 	ops = tell(SqdHandle);
 	rc = farread(SqdHandle, (byte *far)buf, sizeof(dword));
 	
-	if (rc == -1 || rc != sizeof(dword)) return -1;
+	if (rc == -1 || rc != sizeof(dword)) {
+	    ops = -1;
+	    break;
+	}
 	
 	hdrId = get_dword(pbuf);
 	if (hdrId == SQHDRID) {
 	    lseek(SqdHandle, ops, SEEK_SET);
-	    return ops;
+	    break;
 	}
 	ops++;
 	lseek(SqdHandle, ops, SEEK_SET);
     }
-    return -1;
+    return ops;
 }
 
 char *formatMsg(char **text, int len)
