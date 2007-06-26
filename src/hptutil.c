@@ -60,8 +60,8 @@ void OutScreen(char *str, ...)
 {
    char buf[256], dt[20];
    char *pos;
-   short cnt, cnt2;
-   static char cont = 0;
+   int cnt = 0, cnt2;
+   static int cont = 0;
    va_list par;
 
    va_start (par, str);
@@ -69,9 +69,13 @@ void OutScreen(char *str, ...)
       time_t t = time(NULL);
       struct tm *tm = localtime(&t);
       cnt = vsprintf(buf, str, par);
+	  if(cnt >= sizeof(buf))
+         exit(1);
       cnt2 = sprintf(dt, "%2d.%02d.%02d %02d:%02d:%02d ", 
                          tm->tm_mday, tm->tm_mon+1, tm->tm_year%100,
                          tm->tm_hour, tm->tm_min, tm->tm_sec);
+	  if(cnt2 >= sizeof(dt))
+         exit(1);
       buf[cnt] = dt[cnt2] = 0;
    }
    if (quiet == 0) vfprintf(filesout, str, par);
@@ -256,7 +260,7 @@ void processCommandLine(int argc, char *argv[], int *what)
 int main(int argc, char *argv[])
 {
    s_fidoconfig *config;
-   char *keepOrigImportLog;
+   char *keepOrigImportLog = NULL;
    char *buff = NULL;
    int what = 0;
    int ret = 0;
