@@ -50,7 +50,7 @@
 #include <hptutil.h>
 #include <packarea.h>
 
-long oldmsgs;
+unsigned long oldmsgs;
 unsigned long areaOldSize, areaNewSize;
 unsigned long allOldSize, allNewSize;
 
@@ -88,7 +88,8 @@ void SquishPackArea(char *areaName)
 {
    int SqdHandle, SqiHandle;
    int NewSqdHandle, NewSqiHandle;
-   long i;
+   unsigned long i;
+   long position;
 
    char *sqd, *sqi, *newsqd, *newsqi, firstmsg, *text;
 
@@ -159,8 +160,12 @@ void SquishPackArea(char *areaName)
    
       areaOldSize = areaSize(SqdHandle, SqiHandle, (int)-1);
       
-      lseek(SqiHandle, 0L, SEEK_END);
-      oldmsgs = tell(SqiHandle)/SQIDX_SIZE;
+      if(lseek(SqiHandle, 0L, SEEK_END) == -1 ||
+         (position = tell(SqiHandle)) == -1)
+      {
+         exit(1);
+      }
+      oldmsgs = (unsigned long)position/SQIDX_SIZE;
       lseek(SqiHandle, 0L, SEEK_SET);
 
       read_sqbase(SqdHandle, &sqbase);
@@ -275,8 +280,8 @@ void JamPackArea(char *areaName)
 {
    int        IdxHandle, HdrHandle, TxtHandle, LrdHandle;
    int        NewIdxHandle, NewHdrHandle, NewTxtHandle, NewLrdHandle;
-   int        firstnum;
-   long       i, msgnum = 0, delta = 0;
+   int        firstnum, position;
+   unsigned long i, msgnum = 0, delta = 0;
 
    char       *hdr, *idx, *txt, *text, *lrd;
    char       *newhdr, *newidx, *newtxt, *newlrd;
@@ -450,8 +455,12 @@ void JamPackArea(char *areaName)
    
       areaOldSize = areaSize(HdrHandle, IdxHandle, TxtHandle);
    
-      lseek(IdxHandle, 0L, SEEK_END);
-      oldmsgs = tell(IdxHandle) / IDX_SIZE;
+      if(lseek(IdxHandle, 0L, SEEK_END) == -1 ||
+         (position = tell(IdxHandle)) == -1)
+      {
+         exit(1);
+      }
+      oldmsgs = (unsigned long)position / IDX_SIZE;
       lseek(IdxHandle, 0L, SEEK_SET);
       read_hdrinfo(HdrHandle, &HdrInfo);
       write_hdrinfo(NewHdrHandle, &HdrInfo);
@@ -642,7 +651,7 @@ void packArea(s_area *area)
 
 void packAreas(s_fidoconfig *config)
 {
-   int  i;
+   unsigned int  i;
    char *areaname;
 
    FILE *f;
