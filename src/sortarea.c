@@ -140,8 +140,8 @@ unsigned int SquishSortArea(s_area *area)
    int       SqdHandle;
    int       SqiHandle;
    int       SqlHandle;
-   unsigned  int SortMsgs;
-   long      i, msgs, idxPos, users;
+   unsigned  int SortMsgs = 0; /* FIXME: not sure about right default value */
+   long      position;
 
    SQBASE    sqbase;
 //   SQHDR     sqhdr;
@@ -149,7 +149,7 @@ unsigned int SquishSortArea(s_area *area)
    SQIDX     sqidx;
    SQSORTptr sqsort = NULL;
 
-   dword     lastread;
+   dword     i, lastread, msgs, idxPos, users;
    UMSGID    umsgid, umsgidTMP, firstumsgid = 0;
 
    char      *sqd, *sqi, *sql;
@@ -185,25 +185,31 @@ unsigned int SquishSortArea(s_area *area)
 
    umsgid = 0;
    if (SqlHandle != -1) {
-      if (lseek(SqlHandle, 0L, SEEK_END) != -1) {
-         users = (tell(SqlHandle))/sizeof(dword);
-	 lseek(SqlHandle, 0L, SEEK_SET);
-	 for (i = 0; i < users; i++) {
-            sql = (char*)calloc(sizeof(dword), sizeof(char));
-            farread(SqlHandle, sql, sizeof(dword));
-            umsgidTMP = get_dword(sql);
-            nfree(sql);
-	    if (umsgid < umsgidTMP) umsgid = umsgidTMP;
-	 }
+      if (lseek(SqlHandle, 0L, SEEK_END) == -1 ||
+          (position = tell(SqlHandle)) == -1) {
+         exit(1);
       }
+      users = (dword)position/sizeof(dword);
+      lseek(SqlHandle, 0L, SEEK_SET);
+      for (i = 0; i < users; i++) {
+         sql = (char*)calloc(sizeof(dword), sizeof(char));
+         farread(SqlHandle, sql, sizeof(dword));
+         umsgidTMP = get_dword(sql);
+         nfree(sql);
+	 if (umsgid < umsgidTMP) umsgid = umsgidTMP;
+      }
+
    }
 
    if (lock(SqdHandle, 0, 1) == 0) {
       lseek(SqdHandle, 0L, SEEK_SET);
       read_sqbase(SqdHandle, &sqbase);
 
-      lseek(SqiHandle, 0L, SEEK_END);
-      msgs = tell(SqiHandle)/SQIDX_SIZE;
+      if (lseek(SqiHandle, 0L, SEEK_END) == -1 ||
+	  (position = tell(SqiHandle)) == -1) {
+	 exit(1);
+      }
+      msgs = (dword)position/SQIDX_SIZE;
       lseek(SqiHandle, 0L, SEEK_SET);
 
       for (i = 0, lastread = 0; i < msgs && umsgid != 0; i++) {
@@ -330,10 +336,10 @@ unsigned int JamSortArea(s_area *area)
    int        IdxHandle;
    int        HdrHandle;
    int        LrdHandle;
-   unsigned   int SortMsgs;
-   long       i, msgs, idxPos, firstnum;
+   unsigned  int SortMsgs = 0; /* FIXME: not sure about right default value */
+   long       position;
 
-   dword      lastread, lstrdTMP, users;
+   dword      i, lastread, lstrdTMP, users, msgs, idxPos, firstnum;
 
    char       *hdr, *idx, *lrd;
 
@@ -374,16 +380,18 @@ unsigned int JamSortArea(s_area *area)
 
    lastread = 0;
    if (LrdHandle != -1) {
-      if (lseek(LrdHandle, 0L, SEEK_END) != -1) {
-         users = (tell(LrdHandle))/sizeof(JAMLREAD);
-	 lseek(LrdHandle, 0L, SEEK_SET);
-	 for (i = 0; i < users; i++) {
-            lrd = (char*)calloc(sizeof(JAMLREAD), sizeof(char));
-            farread(LrdHandle, lrd, sizeof(JAMLREAD));
-            lstrdTMP = get_dword(lrd+8);
-            nfree(lrd);
-	    if (lastread < lstrdTMP) lastread = lstrdTMP;
-	 }
+      if (lseek(LrdHandle, 0L, SEEK_END) == -1 ||
+	  (position = tell(LrdHandle)) == -1) {
+	 exit(1);
+      }
+      users = (dword)position/sizeof(JAMLREAD);
+      lseek(LrdHandle, 0L, SEEK_SET);
+      for (i = 0; i < users; i++) {
+         lrd = (char*)calloc(sizeof(JAMLREAD), sizeof(char));
+         farread(LrdHandle, lrd, sizeof(JAMLREAD));
+         lstrdTMP = get_dword(lrd+8);
+         nfree(lrd);
+	 if (lastread < lstrdTMP) lastread = lstrdTMP;
       }
    }
 
@@ -391,8 +399,11 @@ unsigned int JamSortArea(s_area *area)
       lseek(HdrHandle, 0L, SEEK_SET);
       read_hdrinfo(HdrHandle, &HdrInfo);
 
-      lseek(IdxHandle, 0L, SEEK_END);
-      msgs = tell(IdxHandle) / IDX_SIZE;
+      if (lseek(IdxHandle, 0L, SEEK_END) == -1 ||
+	  (position = tell(IdxHandle)) == -1) {
+	 exit(1);
+      }
+      msgs = (dword)position / IDX_SIZE;
       lseek(IdxHandle, 0L, SEEK_SET);
 
       if (lastread) {
@@ -486,7 +497,7 @@ void sortArea(s_area *area)
 
 void sortAreas(s_fidoconfig *config)
 {
-   int    i;
+   unsigned int    i;
    char   *areaname;
 
    FILE   *f;
