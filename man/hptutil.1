@@ -1,0 +1,144 @@
+.TH "hptutil" "1" "1.4" "Stas Degteff" "husky"
+.SH "NAME"
+.LP 
+\fBhptutil\fR \- a messagebase service utility for \fBHPT\fR. This program is part of the \fBHusky\fR Fidonet software project.
+.SH "SYNTAX"
+.LP 
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIlink\fP
+.br 
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIpack\fP
+.br 
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIpurge\fP
+.br 
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIsort\fP
+.br 
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIundel\fP
+.br 
+hptutil [\fI\-q\fP] [\fI\-d\fP] \fIfix\fP \fI\-s\fP \fI<msgbasepath>\fP
+.IP 
+where
+.TP 
+.IP 
+\fIimportlog\fP
+file with echoareas list for processing
+.IP 
+\fImsgbasepath\fR
+Pathname of Squish messagebase without suffix .sq?
+.SH "DESCRIPTION"
+.LP 
+
+\fBhptutil\fR is auxiliary program for fidonet message base maintenance. First, this program used for sorting messages by date. Second, for removing old messages. Third, for linking chains of messages for discussion threads. Four, for removing messages what marked for deletion. Fifthly, for fixing messagebases errors.
+
+\fBhptutil\fR reads a fidoconfig (husky configuration file), checks an importlog file (from fidoconfig or from command line) and process echoaread specified in this file. If importlog file is not exist or is't empty \fBhptutil\fR process all aread from fidoconfig.
+
+A fidoconfig pathname should be specified in the \fIFIDOCONFIG\fR enviroment variable, otherwize \fBhptutil\fR look file "\fBconfig\fR" in current directory.
+
+\fBhptutil\fR supports Jam and Squish messagebases formats, and for \fIfix\fR command \- only Squish.
+.SH "COMMANDS"
+.LP 
+.TP 
+\fIfix\fP
+Fix messagebase errors. New messagebase created with names like FixV1_09.sqd
+.TP 
+\fIlink\fP
+if exist importlog file, linking only areas in this file,
+linking all areas if importlog not exist. The deletion of importlog subscribed
+in fidoconfig (and no deleted at all, if you use option \-k).
+Linking all active messages in area.
+.TP 
+\fIpack\fP
+Packing msgbase, used function of renaming files, thats why
+Golded can't stay in reading areas, in this case may be problems (1st warning!).
+Squish packing didn't set umsgid=1 on first letter. No lastread changeing, but
+if umsgid = FFFFFFFF \- this is will be wrong \- not checked (2nd warning!). In
+Jam base first letter also non 1, no lastread changing, but if BaseMsgNum will
+be FFFFFFFF and then 0 lastread's will be damaged \- not checked (3rd warning!).
+Reply chains not killed.
+.TP 
+\fIpurge\fP
+Checked all keywords from fidoconfig (maybe I've forgoten
+something, but I tryed). From fidoconfig \- keepUnread, killRead, purge, max.
+No packing, messages only "marked" as deleted. Reply chains not killed.
+.TP 
+\fIsort\fP
+If exist importlog file, sorting only areas in this file,
+sorting all areas if importlog not exist. File importlog not deleted. Sorting
+started from lastread, condition \- date of the message. Reply chains is killed.
+.TP 
+\fIundel\fP
+Search messages marked for deletion and remove "delete" flag from these messages.
+If exist importlog file, process only areas in this file.
+
+.LP 
+Working as separate modules, for example:
+
+\fBhptutil purge\fR
+\fBhptutil pack\fR
+
+and with several command line options:
+
+\fBhptutil sort link\fR
+
+if you set several command line options, work will be not in this order,
+but first will be \fIpurge\fR, then \fIpack\fR, \fIsort\fR, \fIlink\fR.
+
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-i\fR <\fIimportlog\fP>
+\fB\-I\fR <\fIimportlog\fP>
+Use alternate <\fIimportlog\fP> file contains echoareas list for processing.
+.TP 
+\fB\-j\fR
+Link Jam areas by CRC. This is fast but not accuracy method of linkage.
+.TP 
+\fB\-k\fR
+Don;t remove \fIimportlog\fP file.
+.TP 
+\fB\-q\fR
+Quiet mode (don't output information messages to screen).
+.TP 
+\fB\-d\fR <\fIlevel\fP>
+\fB\-D\fR <\fIlevel\fP>
+Set debug output level to "\fIlevel\fP".
+.SH "FILES"
+.LP 
+\fI/etc/myprogram\fP 
+.br 
+\fI/var/log\fP 
+.SH "ENVIRONMENT VARIABLES"
+.LP 
+.TP 
+\fBFIDOCONFIG\fP
+Full pathname of the husky fidoconfig file.
+.SH "EXAMPLES"
+.LP 
+To sort and link all echoes:
+.LP 
+hptutil \-i notexistent.file sort link
+.LP 
+To sort and link echoeswith new messages you should specifies \fI"importlog"\fR in the fidoconfig and call hptutil after tosser immediately:
+.LP 
+hpt toss; hptutil sort link
+.LP 
+To purge only one echoarea you can run several command sequence:
+.LP 
+echo FIDOSOFT.HUSKY > /tmp/file.tmp
+hptutil \-i file.tmp purge
+rm /tmp/file.tmp
+.LP 
+To fix  Squish messagebase:
+.LP 
+hptutil fix \-s /fido/msgb/ru.husky
+mv /fido/msgb/FixV1_09.sqd /fido/msgb/ru.husky.old.sqd
+mv /fido/msgb/FixV1_09.sqd /fido/msgb/ru.husky.sqd
+.SH "BUGS"
+\fBhptutil pack\fR may damage messagebase. Please backup the messagebase before packing.
+.SH "AUTHORS"
+.LP 
+Max Levenkov <sackett@mail.ru>
+.br 
+Fedor Lizunkov 2:5020/960@fidonet
+.SH "SEE ALSO"
+.LP 
+hpt(1), sqpack(1)
