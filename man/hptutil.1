@@ -1,3 +1,4 @@
+.% $Id$
 .TH "hptutil" "1" "1.4" "Stas Degteff" "husky"
 .SH "NAME"
 .LP 
@@ -14,16 +15,15 @@ hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] 
 .br 
 hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIundel\fP
 .br 
-hptutil [\fI\-q\fP] [\fI\-d\fP] \fIfix\fP \fI\-s\fP \fI<msgbasepath>\fP
-.IP 
-where
+hptutil [\fI\-q\fP] [\fI\-d\fP] \fIfix\fP (\fI\-s\fP|\fI\-S\fP) \fI<msgbasepath>\fP
 .TP 
+where
 .IP 
 \fIimportlog\fP
 file with echoareas list for processing
 .IP 
 \fImsgbasepath\fR
-Pathname of Squish messagebase without suffix .sq?
+Pathname of Squish messagebase without suffix .sqd
 .SH "DESCRIPTION"
 .LP 
 
@@ -73,6 +73,7 @@ If exist importlog file, process only areas in this file.
 Working as separate modules, for example:
 
 \fBhptutil purge\fR
+.br
 \fBhptutil pack\fR
 
 and with several command line options:
@@ -86,6 +87,7 @@ but first will be \fIpurge\fR, then \fIpack\fR, \fIsort\fR, \fIlink\fR.
 .LP 
 .TP 
 \fB\-i\fR <\fIimportlog\fP>
+.TP
 \fB\-I\fR <\fIimportlog\fP>
 Use alternate <\fIimportlog\fP> file contains echoareas list for processing.
 .TP 
@@ -99,8 +101,14 @@ Don;t remove \fIimportlog\fP file.
 Quiet mode (don't output information messages to screen).
 .TP 
 \fB\-d\fR <\fIlevel\fP>
+.TP
 \fB\-D\fR <\fIlevel\fP>
 Set debug output level to "\fIlevel\fP".
+.TP
+\fB\-s\fP <\fImsgbasepath\fR
+.TP
+\fB\-S\fP <\fImsgbasepath\fR
+Pathname of Squish messagebase without suffix .sqd
 .SH "FILES"
 .LP 
 \fI/etc/myprogram\fP 
@@ -114,31 +122,35 @@ Full pathname of the husky fidoconfig file.
 .SH "EXAMPLES"
 .LP 
 To sort and link all echoes:
-.LP 
+.IP 
 hptutil \-i notexistent.file sort link
 .LP 
-To sort and link echoeswith new messages you should specifies \fI"importlog"\fR in the fidoconfig and call hptutil after tosser immediately:
-.LP 
+To sort and link echoesi with new messages you should specifies \fI"importlog"\fR in the fidoconfig and call hptutil after tosser immediately:
+.IP 
 hpt toss; hptutil sort link
 .LP 
 To purge only one echoarea you can run several command sequence:
-.LP 
+.IP 
 echo FIDOSOFT.HUSKY > /tmp/file.tmp
+.br
 hptutil \-i file.tmp purge
+.br
 rm /tmp/file.tmp
 .LP 
 To fix  Squish messagebase:
-.LP 
+.IP 
 hptutil fix \-s /fido/msgb/ru.husky
+.br
 mv /fido/msgb/FixV1_09.sqd /fido/msgb/ru.husky.old.sqd
+.br
 mv /fido/msgb/FixV1_09.sqd /fido/msgb/ru.husky.sqd
-.SH "BUGS"
+.SH "BUGS"
 \fBhptutil pack\fR may damage messagebase. Please backup the messagebase before packing.
 .SH "AUTHORS"
 .LP 
-Max Levenkov <sackett@mail.ru>
-.br 
 Fedor Lizunkov 2:5020/960@fidonet
+.br 
+Max Levenkov <sackett@mail.ru>
 .SH "SEE ALSO"
 .LP 
-hpt(1), sqpack(1)
+\fBhpt(1)\fR, \fBsqpack(1)\fR
