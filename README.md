@@ -1,7 +1,7 @@
 # hptutil
 [![Build Status](https://travis-ci.org/huskyproject/hptutil.svg?branch=master)](https://travis-ci.org/huskyproject/hptutil)
 [![Build status](https://ci.appveyor.com/api/projects/status/5g8658gfok478bnw/branch/master?svg=true)](https://ci.appveyor.com/project/dukelsky/hptutil/branch/master)
-
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5c962f9826284b0c9a437e0a673435ce)](https://www.codacy.com/app/huskyproject/hptutil?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=huskyproject/hptutil&amp;utm_campaign=Badge_Grade)
 
 ## What this program can do
 
