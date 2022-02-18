@@ -18,26 +18,26 @@
  * along with HPT; see the file COPYING.  If not, write to the free
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
-*/
+ */
 
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(UNIX) && !defined(SASC)
-#include <io.h>
+#if !defined (UNIX) && !defined (SASC)
+#  include <io.h>
 #endif
 
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if !defined(UNIX) && !defined(SASC)
-#include <share.h>
+#if !defined (UNIX) && !defined (SASC)
+#  include <share.h>
 #endif
-#if !(defined(_MSC_VER) && (_MSC_VER >= 1200))
-#include <unistd.h>
+#if !(defined (_MSC_VER) && (_MSC_VER >= 1200))
+#  include <unistd.h>
 #endif
 
 #include <huskylib/compiler.h>
@@ -51,9 +51,9 @@
 #include <undelete.h>
 
 
-int undeleteMsgs(s_fidoconfig *config, char *altImportLog)
+int undeleteMsgs(s_fidoconfig * config, char * altImportLog)
 {
     int rc = 0;
-    
+
     return rc;
 }

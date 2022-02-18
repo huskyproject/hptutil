@@ -18,26 +18,26 @@
  * along with HPT; see the file COPYING.  If not, write to the free
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
-*/
+ */
 
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(UNIX) && !defined(SASC)
-#include <io.h>
+#if !defined (UNIX) && !defined (SASC)
+#  include <io.h>
 #endif
 
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if !defined(UNIX) && !defined(SASC)
-#include <share.h>
+#if !defined (UNIX) && !defined (SASC)
+#  include <share.h>
 #endif
-#if !(defined(_MSC_VER) && (_MSC_VER >= 1200))
-#include <unistd.h>
+#if !(defined (_MSC_VER) && (_MSC_VER >= 1200))
+#  include <unistd.h>
 #endif
 
 #include <huskylib/compiler.h>
@@ -50,529 +50,626 @@
 #include <hptutil.h>
 #include <linkarea.h>
 
-
 /* --------------------------SQUISH sector ON------------------------------- */
 
-void SquishDelMsg(int SqdHandle, int SqiHandle, SQBASEptr psqbase, SQHDRptr psqhdr, SQIDXptr psqidx, long SqdPos, long *pmsgs, long *pi)
+void SquishDelMsg(int SqdHandle,
+                  int SqiHandle,
+                  SQBASEptr psqbase,
+                  SQHDRptr psqhdr,
+                  SQIDXptr psqidx,
+                  long SqdPos,
+                  long * pmsgs,
+                  long * pi)
 {
-   SQHDR sqhdr;
+    SQHDR sqhdr;
 
-   if (psqhdr->prev_frame) {
-      lseek(SqdHandle, psqhdr->prev_frame, SEEK_SET);
-      read_sqhdr(SqdHandle, &sqhdr);
-      sqhdr.next_frame = psqhdr->next_frame;
-      lseek(SqdHandle, psqhdr->prev_frame, SEEK_SET);
-      write_sqhdr(SqdHandle, &sqhdr);
-      if (psqhdr->next_frame == 0) {
-         psqbase->last_frame = psqhdr->prev_frame;
-      } else {
-      } /* endif */
-   } else {
-      psqbase->begin_frame = psqhdr->next_frame;
-   } /* endif */
+    if(psqhdr->prev_frame)
+    {
+        lseek(SqdHandle, psqhdr->prev_frame, SEEK_SET);
+        read_sqhdr(SqdHandle, &sqhdr);
+        sqhdr.next_frame = psqhdr->next_frame;
+        lseek(SqdHandle, psqhdr->prev_frame, SEEK_SET);
+        write_sqhdr(SqdHandle, &sqhdr);
 
-   if (psqhdr->next_frame) {
-      lseek(SqdHandle, psqhdr->next_frame, SEEK_SET);
-      read_sqhdr(SqdHandle, &sqhdr);
-      sqhdr.prev_frame = psqhdr->prev_frame;
-      lseek(SqdHandle, psqhdr->next_frame, SEEK_SET);
-      write_sqhdr(SqdHandle, &sqhdr);
-      if (psqhdr->prev_frame == 0) {
-         psqbase->begin_frame = psqhdr->next_frame;
-      } else {
-      } /* endif */
-   } else {
-      psqbase->last_frame = psqhdr->prev_frame;
-   } /* endif */
+        if(psqhdr->next_frame == 0)
+        {
+            psqbase->last_frame = psqhdr->prev_frame;
+        }
+    }
+    else
+    {
+        psqbase->begin_frame = psqhdr->next_frame;
+    }
 
-   if (psqbase->free_frame) {
-      psqbase->last_free_frame = SqdPos;
-   } else {
-      psqbase->free_frame = SqdPos;
-   } /* endif */
+    if(psqhdr->next_frame)
+    {
+        lseek(SqdHandle, psqhdr->next_frame, SEEK_SET);
+        read_sqhdr(SqdHandle, &sqhdr);
+        sqhdr.prev_frame = psqhdr->prev_frame;
+        lseek(SqdHandle, psqhdr->next_frame, SEEK_SET);
+        write_sqhdr(SqdHandle, &sqhdr);
 
-   psqhdr->frame_type |= FRAME_free;
+        if(psqhdr->prev_frame == 0)
+        {
+            psqbase->begin_frame = psqhdr->next_frame;
+        }
+    }
+    else
+    {
+        psqbase->last_frame = psqhdr->prev_frame;
+    }
 
-   lseek(SqdHandle, SqdPos, SEEK_SET);
-   write_sqhdr(SqdHandle, psqhdr);
+    if(psqbase->free_frame)
+    {
+        psqbase->last_free_frame = SqdPos;
+    }
+    else
+    {
+        psqbase->free_frame = SqdPos;
+    }
 
-   psqbase->num_msg--;
-   psqbase->high_msg--;
+    psqhdr->frame_type |= FRAME_free;
+    lseek(SqdHandle, SqdPos, SEEK_SET);
+    write_sqhdr(SqdHandle, psqhdr);
+    psqbase->num_msg--;
+    psqbase->high_msg--;
+    memmove(psqidx + *pi, psqidx + *pi + 1, ((*pmsgs - *pi - 1) * SQIDX_SIZE));
+    (*pi)--;
+    (*pmsgs)--;
+} /* SquishDelMsg */
 
-   memmove(psqidx + *pi, psqidx + *pi + 1, ((*pmsgs - *pi - 1) * SQIDX_SIZE)); 
-   (*pi)--;
-   (*pmsgs)--;
-
-}
-
-void SquishPurgeArea(s_area *area, long *oldmsgs, long *purged)
+void SquishPurgeArea(s_area * area, long * oldmsgs, long * purged)
 {
-   int      SqdHandle;
-   int      SqiHandle;
-   int      SqlHandle;
-   long     i, msgs, users;
+    int SqdHandle;
+    int SqiHandle;
+    int SqlHandle;
+    long i, msgs, users;
+    SQBASE sqbase;
+    SQHDR sqhdr;
+    XMSG xmsg;
+    SQIDXptr sqidx;
+    UMSGID lastread;
+    UMSGID umsgid, umsgidTMP;
+    FOFS frame_prev;
+    FOFS frame_next;
+    FOFS SqdPos;
+    char * sqd, * sqi, * sql;
+    struct tm tmTime;
+    time_t curtime, msgtime;
 
-   SQBASE   sqbase;
-   SQHDR    sqhdr;
-   XMSG     xmsg;
-   SQIDXptr sqidx;
+    curtime = time(NULL);
+    sqd     = (char *)malloc(strlen(area->fileName) + 5);
+    sqi     = (char *)malloc(strlen(area->fileName) + 5);
+    sql     = (char *)malloc(strlen(area->fileName) + 5);
+    sprintf(sqd, "%s%s", area->fileName, EXT_SQDFILE);
+    sprintf(sqi, "%s%s", area->fileName, EXT_SQIFILE);
+    sprintf(sql, "%s%s", area->fileName, EXT_SQLFILE);
+    SqdHandle = Open_File(sqd, fop_rpb);
+    nfree(sqd);
 
-   UMSGID   lastread;
-   UMSGID   umsgid, umsgidTMP;
-   FOFS     frame_prev;
-   FOFS     frame_next;
-   FOFS     SqdPos;
+    if(SqdHandle == -1)
+    {
+        nfree(sqi);
+        nfree(sql);
+        return;
+    }
 
-   char       *sqd, *sqi, *sql;
+    SqiHandle = Open_File(sqi, fop_rpb);
+    nfree(sqi);
 
-   struct tm tmTime;
-   time_t curtime, msgtime;
+    if(SqiHandle == -1)
+    {
+        close(SqdHandle);
+        nfree(sql);
+        return;
+    }
 
-   curtime = time(NULL);
+    SqlHandle = Open_File(sql, fop_rpb);
+    nfree(sql);
+    umsgid = 0;
 
-   sqd = (char*)malloc(strlen(area->fileName)+5);
-   sqi = (char*)malloc(strlen(area->fileName)+5);
-   sql = (char*)malloc(strlen(area->fileName)+5);
+    if(SqlHandle != -1)
+    {
+        if(lseek(SqlHandle, 0L, SEEK_END) != -1)
+        {
+            users = (tell(SqlHandle)) / sizeof(dword);
+            lseek(SqlHandle, 0L, SEEK_SET);
 
-   sprintf(sqd, "%s%s", area->fileName, EXT_SQDFILE);
-   sprintf(sqi, "%s%s", area->fileName, EXT_SQIFILE);
-   sprintf(sql, "%s%s", area->fileName, EXT_SQLFILE);
+            for(i = 0; i < users; i++)
+            {
+                sql = (char *)calloc(sizeof(dword), sizeof(char));
+                farread(SqlHandle, sql, sizeof(dword));
+                umsgidTMP = get_dword(sql);
+                nfree(sql);
 
-   SqdHandle = Open_File(sqd, fop_rpb);
-   nfree(sqd);
+                if(umsgid > umsgidTMP)
+                {
+                    umsgid = umsgidTMP;
+                }
+            }
+        }
+    }
 
-   if (SqdHandle == -1) {
-      nfree(sqi);
-      nfree(sql);
-      return;
-   } /* endif */
-      
-   SqiHandle = Open_File(sqi, fop_rpb);
-   nfree(sqi);
+    if(lock(SqdHandle, 0, 1) == 0)
+    {
+        lseek(SqdHandle, 0L, SEEK_SET);
+        read_sqbase(SqdHandle, &sqbase);
+        lseek(SqiHandle, 0L, SEEK_END);
+        *oldmsgs = msgs = tell(SqiHandle) / SQIDX_SIZE;
+        lseek(SqiHandle, 0L, SEEK_SET);
 
-   if (SqiHandle == -1) {
-      close(SqdHandle);
-      nfree(sql);
-      return;
-   } /* endif */
+        if(msgs)
+        {
+            sqidx = (SQIDXptr)malloc(msgs * SQIDX_SIZE);
+            read_sqidx(SqiHandle, sqidx, msgs);
 
-   SqlHandle = Open_File(sql, fop_rpb);
-   nfree(sql);
+            for(i = 0, lastread = 0; i < msgs && umsgid != 0; i++)
+            {
+                if(sqidx[i].umsgid == umsgid)
+                {
+                    lastread = i + 1;
+                    break;
+                }
+            }
+            frame_prev = frame_next = 0;
 
-   umsgid = 0;
-   if (SqlHandle != -1) {
-      if (lseek(SqlHandle, 0L, SEEK_END) != -1) {
-         users = (tell(SqlHandle))/sizeof(dword);
-	 lseek(SqlHandle, 0L, SEEK_SET);
-	 for (i = 0; i < users; i++) {
-            sql = (char*)calloc(sizeof(dword), sizeof(char));
-            farread(SqlHandle, sql, sizeof(dword));
-            umsgidTMP = get_dword(sql);
-            nfree(sql);
-	    if (umsgid > umsgidTMP) umsgid = umsgidTMP;
-	 }
-      }
-   }
+            for(i = 0; i < msgs; i++)
+            {
+                lseek(SqdHandle, sqidx[i].ofs, SEEK_SET);
+                SqdPos = tell(SqdHandle);
+                read_sqhdr(SqdHandle, &sqhdr);
+                read_xmsg(SqdHandle, &xmsg);
 
-   if (lock(SqdHandle, 0, 1) == 0) {
-      lseek(SqdHandle, 0L, SEEK_SET);
-      read_sqbase(SqdHandle, &sqbase);
+                if(sqhdr.id != SQHDRID)
+                {
+                    continue;
+                }
 
-      lseek(SqiHandle, 0L, SEEK_END);
-      *oldmsgs = msgs = tell(SqiHandle)/SQIDX_SIZE;
-      lseek(SqiHandle, 0L, SEEK_SET);
+                if((xmsg.attr & MSGLOCAL) == MSGLOCAL && (xmsg.attr & MSGSENT) != MSGSENT)
+                {
+                    continue;
+                }
 
-      if (msgs) {
-         sqidx = (SQIDXptr)malloc(msgs * SQIDX_SIZE);
-         read_sqidx(SqiHandle, sqidx, msgs);
+                if(area->keepUnread)
+                {
+                    if(lastread < sqbase.num_msg)
+                    {
+                        continue;
+                    }
+                }
 
-         for (i = 0, lastread = 0; i < msgs && umsgid != 0; i++) {
-            if (sqidx[i].umsgid == umsgid) {
-               lastread = i + 1;
-               break;
-            } else {
-            } /* endif */
-         } /* endfor */
+                if(area->killRead)
+                {
+                    if(lastread >= sqbase.num_msg)
+                    {
+                        SquishDelMsg(SqdHandle,
+                                     SqiHandle,
+                                     &sqbase,
+                                     &sqhdr,
+                                     sqidx,
+                                     SqdPos,
+                                     &msgs,
+                                     &i);
+                        (*purged)++;
+                        continue;
+                    }
+                }
 
-         frame_prev = frame_next = 0;
+                if(area->purge)
+                {
+                    if((xmsg.attr & MSGLOCAL) == MSGLOCAL)
+                    {
+                        DosDate_to_TmDate((union stamp_combo *)&(xmsg.date_written), &tmTime);
+                    }
+                    else
+                    {
+                        DosDate_to_TmDate((union stamp_combo *)&(xmsg.date_arrived), &tmTime);
+                    }
 
-         for (i = 0; i < msgs; i++) {
-            lseek(SqdHandle, sqidx[i].ofs, SEEK_SET);
-            SqdPos = tell(SqdHandle);
-            read_sqhdr(SqdHandle, &sqhdr);
-            read_xmsg(SqdHandle, &xmsg);
+                    msgtime = mktime(&tmTime);
 
-            if (sqhdr.id != SQHDRID) continue;
+                    if(curtime >= msgtime &&
+                       (unsigned long)(curtime - msgtime) > (area->purge * 24 * 60 * 60))
+                    {
+                        SquishDelMsg(SqdHandle,
+                                     SqiHandle,
+                                     &sqbase,
+                                     &sqhdr,
+                                     sqidx,
+                                     SqdPos,
+                                     &msgs,
+                                     &i);
+                        (*purged)++;
+                        continue;
+                    }
+                }
 
-            if ((xmsg.attr & MSGLOCAL) == MSGLOCAL && (xmsg.attr & MSGSENT) != MSGSENT) {
-               continue;
-            } /* endif */
+                if(area->max)
+                {
+                    if(sqbase.num_msg > area->max)
+                    {
+                        SquishDelMsg(SqdHandle,
+                                     SqiHandle,
+                                     &sqbase,
+                                     &sqhdr,
+                                     sqidx,
+                                     SqdPos,
+                                     &msgs,
+                                     &i);
+                        (*purged)++;
+                    }
+                }
+            } /* endfor */
+            lseek(SqdHandle, 0L, SEEK_SET);
+            write_sqbase(SqdHandle, &sqbase);
+            lseek(SqiHandle, 0L, SEEK_SET);
+            write_sqidx(SqiHandle, sqidx, msgs);
+            chsize(SqiHandle, tell(SqiHandle));
+            nfree(sqidx);
+        } /* endif */
 
-            if (area->keepUnread) {
-               if (lastread < sqbase.num_msg) {
-                  continue;
-               } /* endif */
-            } /* endif */
+        unlock(SqdHandle, 0, 1);
+    } /* endif */
 
-            if (area->killRead) {
-               if (lastread >= sqbase.num_msg) {
-                  SquishDelMsg(SqdHandle, SqiHandle, &sqbase, &sqhdr, sqidx, SqdPos, &msgs, &i);
-                  (*purged)++;
-                  continue;
-               } /* endif */
-            } /* endif */
+    close(SqdHandle);
+    close(SqiHandle);
 
-            if (area->purge) {
-               if ((xmsg.attr & MSGLOCAL) == MSGLOCAL) {
-                  DosDate_to_TmDate((union stamp_combo*)&(xmsg.date_written), &tmTime);
-               } else {
-                  DosDate_to_TmDate((union stamp_combo*)&(xmsg.date_arrived), &tmTime);
-               } /* endif */
-               msgtime = mktime(&tmTime);
-               if (curtime >= msgtime &&
-				   (unsigned long)(curtime - msgtime) > (area->purge * 24 * 60 * 60) ) {
-                  SquishDelMsg(SqdHandle, SqiHandle, &sqbase, &sqhdr, sqidx, SqdPos, &msgs, &i);
-                  (*purged)++;
-                  continue;
-               } /* endif */
-            } /* endif */
-
-            if (area->max) {
-               if (sqbase.num_msg > area->max) {
-                  SquishDelMsg(SqdHandle, SqiHandle, &sqbase, &sqhdr, sqidx, SqdPos, &msgs, &i);
-                  (*purged)++;
-               } else {
-               } /* endif */
-            } else {
-            } /* endif */
-
-
-         } /* endfor */
-
-         lseek(SqdHandle, 0L, SEEK_SET);
-         write_sqbase(SqdHandle, &sqbase);
-
-         lseek(SqiHandle, 0L, SEEK_SET);
-         write_sqidx(SqiHandle, sqidx, msgs);
-         chsize(SqiHandle, tell(SqiHandle));
-
-         nfree(sqidx);
-      } else {
-      } /* endif */
-
-      unlock(SqdHandle, 0, 1);
-   } else {
-   } /* endif */
-
-   close(SqdHandle);
-   close(SqiHandle);
-   if (SqlHandle != -1) {
-      close(SqlHandle);
-   } /* endif */
-}
+    if(SqlHandle != -1)
+    {
+        close(SqlHandle);
+    }
+} /* SquishPurgeArea */
 
 /* --------------------------SQUISH sector OFF------------------------------ */
 
+
 /* --------------------------JAM sector ON---------------------------------- */
 
-void JamDelMsg(int HdrHandle, int IdxHandle, JAMHDRINFOptr HdrInfo, JAMHDRptr Hdr, JAMIDXRECptr Idx, long idxPos)
+void JamDelMsg(int HdrHandle,
+               int IdxHandle,
+               JAMHDRINFOptr HdrInfo,
+               JAMHDRptr Hdr,
+               JAMIDXRECptr Idx,
+               long idxPos)
 {
-
-   lseek(HdrHandle, Idx->HdrOffset, SEEK_SET);
-   lseek(IdxHandle, idxPos, SEEK_SET);
-
-   HdrInfo->ActiveMsgs--;
-   HdrInfo->ModCounter++;
-   Hdr->TxtLen = 0;
-   Hdr->Attribute |= JMSG_DELETED;
-   Idx->UserCRC = 0xFFFFFFFFL;
-   Idx->HdrOffset = 0xFFFFFFFFL;
-
-   write_hdr(HdrHandle, Hdr);
-   write_idx(IdxHandle, Idx);
-
-   lseek(HdrHandle, 0L, SEEK_SET);
-   write_hdrinfo(HdrHandle, HdrInfo);
-
+    lseek(HdrHandle, Idx->HdrOffset, SEEK_SET);
+    lseek(IdxHandle, idxPos, SEEK_SET);
+    HdrInfo->ActiveMsgs--;
+    HdrInfo->ModCounter++;
+    Hdr->TxtLen     = 0;
+    Hdr->Attribute |= JMSG_DELETED;
+    Idx->UserCRC    = 0xFFFFFFFFL;
+    Idx->HdrOffset  = 0xFFFFFFFFL;
+    write_hdr(HdrHandle, Hdr);
+    write_idx(IdxHandle, Idx);
+    lseek(HdrHandle, 0L, SEEK_SET);
+    write_hdrinfo(HdrHandle, HdrInfo);
 }
 
-void JamPurgeArea(s_area *area, long *oldmsgs, long *purged)
+void JamPurgeArea(s_area * area, long * oldmsgs, long * purged)
 {
-   int        IdxHandle;
-   int        HdrHandle;
-   int        LrdHandle;
-   long       i, msgs, users, idxPos;
+    int IdxHandle;
+    int HdrHandle;
+    int LrdHandle;
+    long i, msgs, users, idxPos;
+    dword lastread, lstrdTMP;
+    char * hdr, * idx, * lrd;
+    JAMHDRINFO HdrInfo;
+    JAMHDR PurgeHdr;
+    JAMIDXREC PurgeIdx;
+    time_t msgtime, curtime;
 
-   dword      lastread, lstrdTMP;
+    curtime = time(NULL);
+    hdr     = (char *)malloc(strlen(area->fileName) + 5);
+    idx     = (char *)malloc(strlen(area->fileName) + 5);
+    lrd     = (char *)malloc(strlen(area->fileName) + 5);
+    sprintf(hdr, "%s%s", area->fileName, EXT_HDRFILE);
+    sprintf(idx, "%s%s", area->fileName, EXT_IDXFILE);
+    sprintf(lrd, "%s%s", area->fileName, EXT_LRDFILE);
 
-   char       *hdr, *idx, *lrd;
+    /* oldmsgs = newmsgs = 0; */
+    IdxHandle = Open_File(idx, fop_rpb);
+    nfree(idx);
 
-   JAMHDRINFO HdrInfo;
-   JAMHDR     PurgeHdr;
-   JAMIDXREC  PurgeIdx;
+    if(IdxHandle == -1)
+    {
+        nfree(hdr);
+        nfree(lrd);
+        return;
+    }
 
-   time_t msgtime, curtime;
+    HdrHandle = Open_File(hdr, fop_rpb);
+    nfree(hdr);
 
-   curtime = time(NULL);
+    if(HdrHandle == -1)
+    {
+        close(IdxHandle);
+        nfree(lrd);
+        return;
+    }
 
-   hdr = (char*)malloc(strlen(area->fileName)+5);
-   idx = (char*)malloc(strlen(area->fileName)+5);
-   lrd = (char*)malloc(strlen(area->fileName)+5);
+    LrdHandle = Open_File(lrd, fop_rpb);
+    nfree(lrd);
+    lastread = 0;
 
-   sprintf(hdr, "%s%s", area->fileName, EXT_HDRFILE);
-   sprintf(idx, "%s%s", area->fileName, EXT_IDXFILE);
-   sprintf(lrd, "%s%s", area->fileName, EXT_LRDFILE);
+    if(LrdHandle != -1)
+    {
+        if(lseek(LrdHandle, 0L, SEEK_END) != -1)
+        {
+            users = (tell(LrdHandle)) / sizeof(JAMLREAD);
+            lseek(LrdHandle, 0L, SEEK_SET);
 
-//   oldmsgs = newmsgs = 0;
+            for(i = 0; i < users; i++)
+            {
+                lrd = (char *)calloc(sizeof(JAMLREAD), sizeof(char));
+                farread(LrdHandle, lrd, sizeof(JAMLREAD));
+                lstrdTMP = get_dword(lrd + 8);
+                nfree(lrd);
 
-   IdxHandle = Open_File(idx, fop_rpb);
-   nfree(idx);
+                if(lastread > lstrdTMP)
+                {
+                    lastread = lstrdTMP;
+                }
+            }
+        }
+    }
 
-   if (IdxHandle == -1) {
-      nfree(hdr);
-      nfree(lrd);
-      return;
-   } /* endif */
+    if(lock(HdrHandle, 0, 1) == 0)
+    {
+        lseek(HdrHandle, 0L, SEEK_SET);
+        read_hdrinfo(HdrHandle, &HdrInfo);
+        lseek(IdxHandle, 0L, SEEK_END);
+        *oldmsgs = msgs = tell(IdxHandle) / IDX_SIZE;
+        lseek(IdxHandle, 0L, SEEK_SET);
 
-   HdrHandle = Open_File(hdr, fop_rpb);
-   nfree(hdr);
+        for(i = 0; i < msgs; i++)
+        {
+            idxPos = tell(IdxHandle);
+            read_idx(IdxHandle, &PurgeIdx);
 
-   if (HdrHandle == -1) {
-      close(IdxHandle);
-      nfree(lrd);
-      return;
-   } /* endif */
+            if(PurgeIdx.HdrOffset == 0xffffffff)
+            {
+                continue;
+            }
 
-   LrdHandle = Open_File(lrd, fop_rpb);
-   nfree(lrd);
+            if(lseek(HdrHandle, PurgeIdx.HdrOffset, SEEK_SET) == -1)
+            {
+                continue;
+            }
 
-   lastread = 0;
-   if (LrdHandle != -1) {
-      if (lseek(LrdHandle, 0L, SEEK_END) != -1) {
-         users = (tell(LrdHandle))/sizeof(JAMLREAD);
-	 lseek(LrdHandle, 0L, SEEK_SET);
-	 for (i = 0; i < users; i++) {
-            lrd = (char*)calloc(sizeof(JAMLREAD), sizeof(char));
-            farread(LrdHandle, lrd, sizeof(JAMLREAD));
-            lstrdTMP = get_dword(lrd+8);
-            nfree(lrd);
-	    if (lastread > lstrdTMP) lastread = lstrdTMP;
-	 }
-      }
-   }
+            read_hdr(HdrHandle, &PurgeHdr);
 
-   if (lock(HdrHandle, 0, 1) == 0) {
-      lseek(HdrHandle, 0L, SEEK_SET);
-      read_hdrinfo(HdrHandle, &HdrInfo);
+            if(CheckMsg(&PurgeHdr) == 0)
+            {
+                continue;
+            }
 
-      lseek(IdxHandle, 0L, SEEK_END);
-      *oldmsgs = msgs = tell(IdxHandle) / IDX_SIZE;
-      lseek(IdxHandle, 0L, SEEK_SET);
+            if((PurgeHdr.Attribute & JMSG_LOCAL) == JMSG_LOCAL &&
+               (PurgeHdr.Attribute & JMSG_SENT) != JMSG_SENT)
+            {
+                continue;
+            }
 
-      for (i = 0; i < msgs; i++) {
-         idxPos = tell(IdxHandle);
-         read_idx(IdxHandle, &PurgeIdx);
-         if (PurgeIdx.HdrOffset == 0xffffffff) {
-            continue;
-         } /* endif */
-         if (lseek(HdrHandle, PurgeIdx.HdrOffset, SEEK_SET) == -1) continue;
-         read_hdr(HdrHandle, &PurgeHdr);
+            if(area->keepUnread)
+            {
+                if(lastread < PurgeHdr.MsgNum)
+                {
+                    continue;
+                }
+            }
 
-         if (CheckMsg(&PurgeHdr) == 0) {
-            continue;
-         } /* endif */
+            if(area->killRead)
+            {
+                if(lastread >= PurgeHdr.MsgNum)
+                {
+                    JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
+                    (*purged)++;
+                    continue;
+                }
+            }
 
-         if ((PurgeHdr.Attribute & JMSG_LOCAL) == JMSG_LOCAL && (PurgeHdr.Attribute & JMSG_SENT) != JMSG_SENT) {
-            continue;
-         } else {
-         } /* endif */
+            if(area->purge)
+            {
+                if((PurgeHdr.Attribute & JMSG_LOCAL) == JMSG_LOCAL)
+                {
+                    msgtime = PurgeHdr.DateWritten;
+                }
+                else
+                {
+                    msgtime = PurgeHdr.DateProcessed;
+                }
 
-         if (area->keepUnread) {
-            if (lastread < PurgeHdr.MsgNum) {
-               continue;
-            } /* endif */
-         } /* endif */
+                if(curtime > msgtime && (dword)(curtime - msgtime) > (area->purge * 24 * 60 * 60))
+                {
+                    JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
+                    (*purged)++;
+                    continue;
+                }
+            }
 
-         if (area->killRead) {
-            if (lastread >= PurgeHdr.MsgNum) {
-               JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
-               (*purged)++;
-               continue;
-            } /* endif */
-         } /* endif */
+            if(area->max)
+            {
+                if(HdrInfo.ActiveMsgs > area->max)
+                {
+                    JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
+                    (*purged)++;
+                }
+            }
+        } /* endfor */
+        unlock(HdrHandle, 0, 1);
+    } /* endif */
 
-         if (area->purge) {
-            if ((PurgeHdr.Attribute & JMSG_LOCAL) == JMSG_LOCAL) {
-               msgtime = PurgeHdr.DateWritten;
-            } else {
-               msgtime = PurgeHdr.DateProcessed;
-            } /* endif */
-            if (curtime > msgtime &&
-                (dword)(curtime - msgtime) > (area->purge * 24 * 60 * 60) ) {
-               JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
-               (*purged)++;
-               continue;
-            } /* endif */
-         } /* endif */
+    close(HdrHandle);
+    close(IdxHandle);
 
-         if (area->max) {
-            if (HdrInfo.ActiveMsgs > area->max) {
-               JamDelMsg(HdrHandle, IdxHandle, &HdrInfo, &PurgeHdr, &PurgeIdx, idxPos);
-               (*purged)++;
-            } else {
-            } /* endif */
-         } else {
-         } /* endif */
+    if(LrdHandle != -1)
+    {
+        close(LrdHandle);
+    }
 
-      } /* endfor */
+    return;
+} /* JamPurgeArea */
 
-      unlock(HdrHandle, 0, 1);
-
-   } else {
-   } /* endif */
-
-   close(HdrHandle);
-   close(IdxHandle);
-   if (LrdHandle != -1) {
-      close(LrdHandle);
-   } /* endif */
-
-   return;
-}
 /* --------------------------JAM sector OFF--------------------------------- */
 
-void purgeArea(s_area *area, long *oldmsgs, long *purged)
+void purgeArea(s_area * area, long * oldmsgs, long * purged)
 {
-   int make = 0;
-   *purged = *oldmsgs = 0;
+    int make = 0;
 
-   if (area->nopack) OutScreen("has nopack option ... ");
-   else {
-	   if ((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM) {
-		   OutScreen("is JAM ... ");
-		   JamPurgeArea(area, oldmsgs, purged);
-		   make = 1;
-	   } else {
-		   if ((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH) {
-			   OutScreen("is Squish ... ");
-			   SquishPurgeArea(area, oldmsgs, purged);
-			   make = 1;
-		   } else {
-			   if ((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM) {
-				   OutScreen("is MSG ... ");
-//            MsgPurgeArea(area, oldmsgs, purged);
-				   make = 1;
-			   } else {
-				   if ((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH) {
-					   OutScreen("is PASSTHROUGH ... ");
-				   } else {
-				   } /* endif */
-			   } /* endif */
-		   } /* endif */
-	   } /* endif */
-   }
+    *purged = *oldmsgs = 0;
 
-   if (make) {
-	   OutScreen("%lu-%lu=%lu, ", *oldmsgs, *purged, *oldmsgs-*purged);
-	   OutScreen("Done\n");
-   } else {
-	   OutScreen("Ignore\n");
-   } /* endif */
-}
+    if(area->nopack)
+    {
+        OutScreen("has nopack option ... ");
+    }
+    else
+    {
+        if((area->msgbType & MSGTYPE_JAM) == MSGTYPE_JAM)
+        {
+            OutScreen("is JAM ... ");
+            JamPurgeArea(area, oldmsgs, purged);
+            make = 1;
+        }
+        else
+        {
+            if((area->msgbType & MSGTYPE_SQUISH) == MSGTYPE_SQUISH)
+            {
+                OutScreen("is Squish ... ");
+                SquishPurgeArea(area, oldmsgs, purged);
+                make = 1;
+            }
+            else
+            {
+                if((area->msgbType & MSGTYPE_SDM) == MSGTYPE_SDM)
+                {
+                    OutScreen("is MSG ... ");
+                    /* MsgPurgeArea(area, oldmsgs, purged); */
+                    make = 1;
+                }
+                else
+                {
+                    if((area->msgbType & MSGTYPE_PASSTHROUGH) == MSGTYPE_PASSTHROUGH)
+                    {
+                        OutScreen("is PASSTHROUGH ... ");
+                    }
+                }
+            }
+        }
+    } /* endif */
 
-void purgeAreas(s_fidoconfig *config)
+    if(make)
+    {
+        OutScreen("%lu-%lu=%lu, ", *oldmsgs, *purged, *oldmsgs - *purged);
+        OutScreen("Done\n");
+    }
+    else
+    {
+        OutScreen("Ignore\n");
+    }
+} /* purgeArea */
+
+void purgeAreas(s_fidoconfig * config)
 {
-   unsigned int  i;
-   long totoldmsgs = 0, totpurged = 0;
-   long areaoldmsgs, areapurged;
-   
-   char *areaname;
-   FILE *f;
+    unsigned int i;
+    long totoldmsgs = 0, totpurged = 0;
+    long areaoldmsgs, areapurged;
+    char * areaname;
+    FILE * f;
 
+    OutScreen("Purge areas begin\n");
 
-   OutScreen("Purge areas begin\n");
-   
-   
-   if (altImportLog) {
+    if(altImportLog)
+    {
+        f = fopen(altImportLog, "rt");
 
-      f = fopen(altImportLog, "rt");
-      if (f) {
-         OutScreen("Purge from \'%s\' alternative importlog file\n", altImportLog);
-         while ((areaname = readLine(f)) != NULL) {
+        if(f)
+        {
+            OutScreen("Purge from \'%s\' alternative importlog file\n", altImportLog);
 
-	    // EchoAreas
-	    for (i = 0; i < config->echoAreaCount; i++) {
-		if (stricmp(config->echoAreas[i].areaName, areaname) == 0) {
-		    OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
-		    purgeArea(&(config->echoAreas[i]), &areaoldmsgs, &areapurged);
-		    totoldmsgs+=areaoldmsgs;
-		    totpurged+=areapurged;
-		}
-	    } /* endfor */
+            while((areaname = readLine(f)) != NULL)
+            {
+                /* EchoAreas */
+                for(i = 0; i < config->echoAreaCount; i++)
+                {
+                    if(stricmp(config->echoAreas[i].areaName, areaname) == 0)
+                    {
+                        OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
+                        purgeArea(&(config->echoAreas[i]), &areaoldmsgs, &areapurged);
+                        totoldmsgs += areaoldmsgs;
+                        totpurged  += areapurged;
+                    }
+                }
 
-	    // LocalAreas
-	    for (i = 0; i < config->localAreaCount; i++) {
-		if (stricmp(config->localAreas[i].areaName, areaname) == 0) {
-		    OutScreen("LocalArea %s ", config->localAreas[i].areaName);
-		    purgeArea(&(config->localAreas[i]), &areaoldmsgs, &areapurged);
-		    totoldmsgs+=areaoldmsgs;
-		    totpurged+=areapurged;
-		}
-	    } /* endfor */
+                /* LocalAreas */
+                for(i = 0; i < config->localAreaCount; i++)
+                {
+                    if(stricmp(config->localAreas[i].areaName, areaname) == 0)
+                    {
+                        OutScreen("LocalArea %s ", config->localAreas[i].areaName);
+                        purgeArea(&(config->localAreas[i]), &areaoldmsgs, &areapurged);
+                        totoldmsgs += areaoldmsgs;
+                        totpurged  += areapurged;
+                    }
+                }
 
-	    // NetAreas
-	    for (i = 0; i < config->netMailAreaCount; i++) {
-		if (stricmp(config->netMailAreas[i].areaName, areaname) == 0) {
-		    OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
-		    purgeArea(&(config->netMailAreas[i]), &areaoldmsgs, &areapurged);
-		    totoldmsgs+=areaoldmsgs;
-		    totpurged+=areapurged;
-		}
-	    }
-        
-	    nfree(areaname);
+                /* NetAreas */
+                for(i = 0; i < config->netMailAreaCount; i++)
+                {
+                    if(stricmp(config->netMailAreas[i].areaName, areaname) == 0)
+                    {
+                        OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
+                        purgeArea(&(config->netMailAreas[i]), &areaoldmsgs, &areapurged);
+                        totoldmsgs += areaoldmsgs;
+                        totpurged  += areapurged;
+                    }
+                }
+                nfree(areaname);
+            } /* endwhile */
+            fclose(f);
 
-	 } /* endwhile */
+            if((config->LinkWithImportlog == lwiKill) && (keepImportLog == 0))
+            {
+                remove(altImportLog);
+            }
 
-         fclose(f);
-         if ((config->LinkWithImportlog == lwiKill) && (keepImportLog == 0)) remove(altImportLog);
-	 OutScreen("Purge areas end\n");
-	 OutScreen("Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n\n", 
-              totoldmsgs, totpurged, totoldmsgs-totpurged);
-         return;
-      } /* endif */
-   } else {
-   } /* endif */
-   
-   
-   
-   
-   // EchoAreas
-   for (i = 0; i < config->echoAreaCount; i++) {
-      OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
-      purgeArea(&(config->echoAreas[i]), &areaoldmsgs, &areapurged);
-      totoldmsgs+=areaoldmsgs;
-      totpurged+=areapurged;
-   } /* endfor */
+            OutScreen("Purge areas end\n");
+            OutScreen("Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n\n",
+                      totoldmsgs,
+                      totpurged,
+                      totoldmsgs - totpurged);
+            return;
+        } /* endif */
+    } /* endif */
 
-   // LocalAreas
-   for (i = 0; i < config->localAreaCount; i++) {
-      OutScreen("LocalArea %s ", config->localAreas[i].areaName);
-      purgeArea(&(config->localAreas[i]), &areaoldmsgs, &areapurged);
-      totoldmsgs+=areaoldmsgs;
-      totpurged+=areapurged;
-   } /* endfor */
+    // EchoAreas
+    for(i = 0; i < config->echoAreaCount; i++)
+    {
+        OutScreen("EchoArea %s ", config->echoAreas[i].areaName);
+        purgeArea(&(config->echoAreas[i]), &areaoldmsgs, &areapurged);
+        totoldmsgs += areaoldmsgs;
+        totpurged  += areapurged;
+    }
 
-   // NetAreas
-   for (i = 0; i < config->netMailAreaCount; i++) {
-      OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
-      purgeArea(&(config->netMailAreas[i]), &areaoldmsgs, &areapurged);
-      totoldmsgs+=areaoldmsgs;
-      totpurged+=areapurged;
-   } /* endfor */
+    /* LocalAreas */
+    for(i = 0; i < config->localAreaCount; i++)
+    {
+        OutScreen("LocalArea %s ", config->localAreas[i].areaName);
+        purgeArea(&(config->localAreas[i]), &areaoldmsgs, &areapurged);
+        totoldmsgs += areaoldmsgs;
+        totpurged  += areapurged;
+    }
 
-   OutScreen("Purge areas end\n");
-   OutScreen("Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n\n", 
-           totoldmsgs, totpurged, totoldmsgs-totpurged);
-}
-
+    /* NetAreas */
+    for(i = 0; i < config->netMailAreaCount; i++)
+    {
+        OutScreen("NetArea %s ", config->netMailAreas[i].areaName);
+        purgeArea(&(config->netMailAreas[i]), &areaoldmsgs, &areapurged);
+        totoldmsgs += areaoldmsgs;
+        totpurged  += areapurged;
+    }
+    OutScreen("Purge areas end\n");
+    OutScreen("Total old msgs:%lu Total purged:%lu Total new msgs:%lu\n\n",
+              totoldmsgs,
+              totpurged,
+              totoldmsgs - totpurged);
+} /* purgeAreas */
