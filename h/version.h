@@ -19,6 +19,7 @@
  * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *****************************************************************************
  */
+
 #ifndef VERSION_H
 #define VERSION_H
 
