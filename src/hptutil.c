@@ -40,6 +40,7 @@
 #include <undelete.h>
 
 #include "version.h"
+#include "cvsdate.h"
 
 char * versionStr;
 FILE * filesout;
@@ -383,7 +384,7 @@ int main(int argc, char * argv[])
     fileserr = stderr;
     setbuf(filesout, NULL);
     setbuf(fileserr, NULL);
-    versionStr = GenVersionStr("hptutil", VER_MAJOR, VER_MINOR, VER_PATCH, VER_BRANCH, cvs_date);
+    versionStr = GenVersionStr("hptutil", hptutil_VER_MAJOR, hptutil_VER_MINOR, hptutil_VER_PATCH, hptutil_VER_BRANCH, cvs_date);
     processCommandLine(argc, argv, &what);
 
     if(quiet)

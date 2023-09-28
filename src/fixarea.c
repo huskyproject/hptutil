@@ -49,6 +49,7 @@
 #include <squish.h>
 #include <hptutil.h>
 #include <fixarea.h>
+#include "version.h"
 
 FOFS findHdrId(int SqdHandle)
 {
@@ -145,7 +146,7 @@ int SquishFixArea()
         NewNameBase[0] = '\000';
     }
 
-    sprintf(NewNameBase + strlen(NewNameBase), "FixV%d_%02d", VER_MAJOR, VER_MINOR);
+    sprintf(NewNameBase + strlen(NewNameBase), "FixV%d_%02d", hptutil_VER_MAJOR, hptutil_VER_MINOR);
     sqd = (char *)malloc(strlen(basefilename) + 5);
     sprintf(sqd, "%s%s", basefilename, EXT_SQDFILE);
     SqdHandle = Open_File(sqd, fop_rob);
