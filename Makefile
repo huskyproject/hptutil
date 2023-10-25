@@ -22,8 +22,8 @@ hptutil_TARGET_DST = $(BINDIR_DST)$(hptutil_TARGET)
 
 ifdef MAN1DIR
     hptutil_MAN1PAGES := hptutil.1
-    hptutil_MAN1BLD := $(hptutil_BUILDDIR)$(hptutil_MAN1PAGES).gz
-    hptutil_MAN1DST := $(DESTDIR)$(MAN1DIR)$(DIRSEP)$(hptutil_MAN1PAGES).gz
+    hptutil_MAN1BLD := $(hptutil_BUILDDIR)$(hptutil_MAN1PAGES)$(_COMPR)
+    hptutil_MAN1DST := $(DESTDIR)$(MAN1DIR)$(DIRSEP)$(hptutil_MAN1PAGES)$(_COMPR)
 endif
 
 .PHONY: hptutil_build hptutil_install hptutil_uninstall hptutil_clean \
@@ -56,7 +56,11 @@ $(hptutil_OBJDIR): | $(hptutil_BUILDDIR) do_not_run_make_as_root
 # Build man pages
 ifdef MAN1DIR
     $(hptutil_MAN1BLD): $(hptutil_MANDIR)$(hptutil_MAN1PAGES) | do_not_run_make_as_root
-	gzip -c $< > $@
+    ifdef COMPRESS
+		$(COMPRESS) -c $< > $@
+    else
+		$(CP) $(CPOPT) $< $@
+    endif
 else
     $(hptutil_MAN1BLD): ;
 endif
