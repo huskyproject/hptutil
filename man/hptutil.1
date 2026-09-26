@@ -5,17 +5,17 @@
 \fBhptutil\fR \- a messagebase service utility for \fBHPT\fR. This program is part of the \fBHusky\fR Fidonet software project.
 .SH "SYNTAX"
 .LP 
-hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIlink\fP
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-c <config>\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIlink\fP
 .br 
-hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIpack\fP
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-c <config>\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIpack\fP
 .br 
-hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIpurge\fP
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-c <config>\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIpurge\fP
 .br 
-hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIsort\fP
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-c <config>\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIsort\fP
 .br 
-hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIundel\fP
+hptutil [\fI\-j\fP] [\fI\-k\fP] [\fI\-q\fP] [\fI\-c <config>\fP] [\fI\-d\fP] [\fI\-i <importlog>\fP] \fIundel\fP
 .br 
-hptutil [\fI\-q\fP] [\fI\-d\fP] \fIfix\fP (\fI\-s\fP|\fI\-S\fP) \fI<msgbasepath>\fP
+hptutil [\fI\-q\fP] [\fI\-c <config>\fP] [\fI\-d\fP] \fIfix\fP (\fI\-s\fP|\fI\-S\fP) \fI<msgbasepath>\fP
 .TP 
 where
 .IP 
@@ -99,6 +99,12 @@ Don;t remove \fIimportlog\fP file.
 .TP 
 \fB\-q\fR
 Quiet mode (don't output information messages to screen).
+.TP 
+\fB\-c\fR <\fIconfig\fP>
+Use <\fIconfig\fP> as the fidoconfig file instead of the default one (or the one set by the FIDOCONFIG environment variable).
+.TP 
+\fB\-c\fR <\fIconfig\fP>
+Use <\fIconfig\fP> as the fidoconfig file instead of the default one (or the one set by the FIDOCONFIG environment variable).
 .TP 
 \fB\-d\fR <\fIlevel\fP>
 .TP

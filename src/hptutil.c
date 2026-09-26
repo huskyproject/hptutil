@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with HPT; see the file COPYING.  If not, write to the free
- * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Software Foundation, licensing@fsf.org
  *****************************************************************************
  */
 
@@ -53,6 +53,7 @@ char keepImportLog = 0;
 char typebase;
 char * basefilename;
 char * altImportLog     = NULL;
+static char * cfgFile   = NULL;
 unsigned int debugLevel = 0;
 
 void OutScreen(char * str, ...)
@@ -69,21 +70,30 @@ void OutScreen(char * str, ...)
     {
         time_t t       = time(NULL);
         struct tm * tm = localtime(&t);
-        cnt = vsprintf(buf, str, par);
+        va_list par2;
 
-        if(cnt >= sizeof(buf))
+        /* par is consumed by vfprintf() below, so work on a copy here */
+        va_copy(par2, par);
+        cnt = vsnprintf(buf, sizeof(buf), str, par2);
+        va_end(par2);
+
+        if(cnt < 0)
         {
-            exit(1);
+            cnt = 0;
+        }
+        else if(cnt >= (int)sizeof(buf))
+        {
+            cnt = sizeof(buf) - 1; /* output was truncated */
         }
 
-        cnt2 = sprintf(dt,
-                       "%2d.%02d.%02d %02d:%02d:%02d ",
-                       tm->tm_mday,
-                       tm->tm_mon + 1,
-                       tm->tm_year % 100,
-                       tm->tm_hour,
-                       tm->tm_min,
-                       tm->tm_sec);
+        cnt2 = snprintf(dt, sizeof(dt),
+                        "%2d.%02d.%02d %02d:%02d:%02d ",
+                        tm->tm_mday,
+                        tm->tm_mon + 1,
+                        tm->tm_year % 100,
+                        tm->tm_hour,
+                        tm->tm_min,
+                        tm->tm_sec);
 
         if(cnt2 >= sizeof(dt))
         {
@@ -280,6 +290,7 @@ void processCommandLine(int argc, char * argv[], int * what)
             "\t  -j\t\t- link Jam areas by CRC (great speed-up)\n"
             "\t  -k\t\t- keep import.log file\n"
             "\t  -q\t\t- quiet mode (no screen output)\n"
+            "\t  -c <filename>\t- use alternative fidoconfig file\n"
             "\t  -i <filename>\t- alternative import.log\n\n");
         exit(1);
     } /* endif */
@@ -342,6 +353,26 @@ void processCommandLine(int argc, char * argv[], int * what)
         {
             xstrcat(&altImportLog, argv[i] + 2);
         }
+        else if(stricmp(argv[i], "-c") == 0)
+        {
+            if(i < argc - 1)
+            {
+                i++;
+                nfree(cfgFile);
+                xstrcat(&cfgFile, argv[i]);
+            }
+            else
+            {
+                printMyTitle();
+                fprintf(fileserr, "Parameter is required for '-c'\n\n");
+                exit(5);
+            }
+        }
+        else if(argv[i][0] == '-' && (argv[i][1] == 'c' || argv[i][1] == 'C'))
+        {
+            nfree(cfgFile);
+            xstrcat(&cfgFile, argv[i] + 2);
+        }
         else if(stricmp(argv[i], "-d") == 0)
         {
             if(i < argc - 1)
@@ -368,6 +399,7 @@ void processCommandLine(int argc, char * argv[], int * what)
         {
             printMyTitle();
             fprintf(fileserr, "Unknown option '%s'\n\n", argv[i]);
+            exit(5);
         }
     } /* endwhile */
 } /* processCommandLine */
@@ -397,7 +429,7 @@ int main(int argc, char * argv[])
     if(what)
     {
         setvar("module", "hptutil");
-        config = readConfig(NULL);
+        config = readConfig(cfgFile);
 
         if(config)
         {
@@ -456,7 +488,14 @@ int main(int argc, char * argv[])
         }
         else
         {
-            fprintf(fileserr, "Could not read fido config\n");
+            if(cfgFile)
+            {
+                fprintf(fileserr, "Could not read fido config '%s'\n", cfgFile);
+            }
+            else
+            {
+                fprintf(fileserr, "Could not read fido config\n");
+            }
             ret = 1;
         } /* endif */
     }
@@ -473,5 +512,6 @@ int main(int argc, char * argv[])
         fclose(hptutil_log);
     }
 
+    nfree(cfgFile);
     return ret;
 } /* main */

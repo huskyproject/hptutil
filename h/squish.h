@@ -8,7 +8,11 @@
 #define EXT_SQIFILE ".sqi"
 #define EXT_SQLFILE ".sql"
 
-typedef long FOFS;
+/* Squish file offsets are 32-bit on disk and in smapi's structures.
+ * 'long' is 64-bit on LP64 systems (x86_64, aarch64), which silently
+ * changed the layout of SQBASE/SQHDR/SQIDX and broke everything that
+ * reads them through smapi's read_sq*() functions. */
+typedef hUINT32 FOFS;
 
 #define NULL_FRAME ((FOFS)0L)
 #define FRAME_normal 0x00
@@ -71,6 +75,11 @@ typedef struct
 } SQIDX, *SQIDXptr;
 
 #define SQIDX_SIZE 12
+
+/* compile-time layout checks: these structures are filled by smapi */
+typedef char sqidx_size_check[(sizeof(SQIDX) == SQIDX_SIZE) ? 1 : -1];
+typedef char sqhdr_size_check[(sizeof(SQHDR) == SQHDR_SIZE) ? 1 : -1];
+typedef char sqbase_size_check[(sizeof(SQBASE) == SQBASE_SIZE) ? 1 : -1];
 
 int read_xmsg(int handle, XMSG * pxmsg);
 int write_xmsg(int handle, XMSG * pxmsg);

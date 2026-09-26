@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with HPT; see the file COPYING.  If not, write to the free
- * Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Software Foundation, licensing@fsf.org
  *****************************************************************************
  */
 
@@ -568,6 +568,40 @@ void purgeArea(s_area * area, long * oldmsgs, long * purged)
     }
 } /* purgeArea */
 
+/* import.log gets one line per toss run, so the same area may be listed
+ * many times. Returns 1 if 'name' was already seen, otherwise remembers it. */
+static int areaAlreadySeen(char *** seen, unsigned int * nseen, const char * name)
+{
+    unsigned int k;
+
+    for(k = 0; k < *nseen; k++)
+    {
+        if(stricmp((*seen)[k], name) == 0)
+        {
+            return 1;
+        }
+    }
+
+    *seen = (char **)realloc(*seen, (*nseen + 1) * sizeof(char *));
+    (*seen)[*nseen] = NULL;
+    xstrcat(&(*seen)[*nseen], (char *)name);
+    (*nseen)++;
+    return 0;
+}
+
+static void freeSeen(char *** seen, unsigned int * nseen)
+{
+    unsigned int k;
+
+    for(k = 0; k < *nseen; k++)
+    {
+        nfree((*seen)[k]);
+    }
+
+    nfree(*seen);
+    *nseen = 0;
+}
+
 void purgeAreas(s_fidoconfig * config)
 {
     unsigned int i;
@@ -575,6 +609,8 @@ void purgeAreas(s_fidoconfig * config)
     long areaoldmsgs, areapurged;
     char * areaname;
     FILE * f;
+    char ** seen = NULL;
+    unsigned int nseen = 0;
 
     OutScreen("Purge areas begin\n");
 
@@ -588,6 +624,12 @@ void purgeAreas(s_fidoconfig * config)
 
             while((areaname = readLine(f)) != NULL)
             {
+                if(areaAlreadySeen(&seen, &nseen, areaname))
+                {
+                    nfree(areaname);
+                    continue;
+                }
+
                 /* EchoAreas */
                 for(i = 0; i < config->echoAreaCount; i++)
                 {
@@ -626,6 +668,7 @@ void purgeAreas(s_fidoconfig * config)
                 nfree(areaname);
             } /* endwhile */
             fclose(f);
+            freeSeen(&seen, &nseen);
 
             if((config->LinkWithImportlog == lwiKill) && (keepImportLog == 0))
             {
